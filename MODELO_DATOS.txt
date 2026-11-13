@@ -1,0 +1,455 @@
+# TIEMPOU
+# MODELO DE DATOS
+
+Versión: 1.0
+Estado: Propuesta técnica inicial
+Documento relacionado: ARQUITECTURA_TECNICA.txt
+Documento relacionado: INVENTARIO_ARCHIVOS.txt
+
+---
+
+# 1. OBJETIVO
+
+Definir cómo se representará, organizará y relacionará toda la información utilizada por TiempoU.
+
+Este documento establece las estructuras de datos que compartirán los diferentes módulos de la aplicación.
+
+Su cumplimiento es obligatorio para evitar incompatibilidades entre archivos.
+
+# 2. PRINCIPIOS GENERALES
+
+1. Cada materia tendrá un identificador único.
+2. Cada actividad tendrá un identificador único.
+3. Cada actividad pertenecerá a una materia.
+4. Cada sesión pertenecerá a una actividad.
+5. Las materias y actividades se administrarán desde un estado central.
+6. Los cálculos se realizarán utilizando la información centralizada.
+7. Los resultados calculados no se duplicarán innecesariamente en diferentes estructuras.
+8. Las fechas utilizarán el formato YYYY-MM-DD.
+9. Las horas utilizarán el formato HH:mm.
+10. Los valores numéricos deberán validarse antes de guardarse.
+
+# 3. ESTRUCTURA GENERAL DEL ESTADO
+
+La aplicación utilizará un estado global denominado appState.
+
+Su estructura conceptual será:
+
+appState = {
+  subjects: [],
+  activities: [],
+  availability: {},
+  sessions: [],
+  notifications: []
+}
+
+Cada propiedad tendrá una responsabilidad específica.
+
+subjects:
+Materias registradas.
+
+activities:
+Actividades asociadas a las materias.
+
+availability:
+Disponibilidad semanal.
+
+sessions:
+Sesiones de estudio generadas.
+
+notifications:
+Notificaciones internas.
+
+# 4. ESTRUCTURA DE MATERIAS
+
+Entidad: Subject
+
+Propiedades:
+
+id:
+Identificador único.
+
+name:
+Nombre de la materia.
+
+description:
+Descripción opcional.
+
+gradingMode:
+Modalidad de calificación.
+
+Valores permitidos:
+- POINTS
+- AVERAGE
+
+maxGrade:
+Escala máxima de calificación cuando corresponda.
+
+passingGrade:
+Calificación mínima para aprobar.
+
+maxPoints:
+Puntaje máximo de la materia en modalidad de acumulación.
+
+passingPoints:
+Puntaje mínimo para aprobar en modalidad de acumulación.
+
+status:
+Estado de la materia.
+
+Valores permitidos:
+- IN_PROGRESS
+- FINISHED
+
+createdAt:
+Fecha de creación.
+
+Reglas:
+
+1. La modalidad de calificación no podrá modificarse después de crear la materia.
+2. Los valores académicos podrán modificarse respetando las validaciones.
+3. Una materia finalizada conservará sus datos.
+4. Una materia reactivada recuperará su estado anterior.
+5. Una materia solo podrá finalizarse cuando todas sus actividades tengan un estado de entrega registrado.
+
+Los campos específicos de cada modalidad deberán validarse según corresponda. No se utilizarán simultáneamente como si fueran una misma escala.
+
+# 5. ESTRUCTURA DE ACTIVIDADES
+
+Entidad: Activity
+
+Propiedades:
+
+id:
+Identificador único.
+
+subjectId:
+Identificador de la materia a la que pertenece.
+
+title:
+Nombre de la actividad.
+
+description:
+Descripción opcional.
+
+dueDate:
+Fecha de entrega obligatoria.
+
+academicWeight:
+Peso académico o valor asignado a la actividad.
+
+estimatedEffortHours:
+Tiempo estimado de realización en horas.
+
+deliveryStatus:
+Estado de entrega.
+
+Valores permitidos:
+- PENDING
+- DELIVERED
+- NOT_DELIVERED
+
+gradeValue:
+Calificación obtenida. Puede ser null cuando todavía no exista una nota.
+
+createdAt:
+Fecha de creación.
+
+Reglas:
+
+1. Toda actividad debe pertenecer a una materia existente.
+2. La fecha de entrega será obligatoria.
+3. El peso académico deberá respetar el máximo establecido para la materia.
+4. El esfuerzo estimado deberá ser un valor positivo.
+5. Una actividad entregada sin nota tendrá estado de pendiente de calificación.
+6. Una actividad no entregada registrará calificación cero.
+7. Borrar una nota no modificará automáticamente el estado de entrega.
+8. Una actividad eliminada no deberá dejar sesiones ni registros asociados.
+
+El estado PENDING representa una actividad todavía no entregada.
+
+El estado DELIVERED representa una actividad entregada.
+
+El estado NOT_DELIVERED representa una actividad no entregada.
+
+El estado pendiente de calificación será una condición derivada de DELIVERED y gradeValue = null. No será necesario duplicarlo como otro estado independiente.
+
+# 6. MODALIDADES DE CALIFICACIÓN
+
+## 6.1 POINTS
+
+En esta modalidad se utilizarán:
+
+- maxPoints.
+- passingPoints.
+- academicWeight.
+- gradeValue.
+
+El sistema calculará:
+
+- Puntos obtenidos.
+- Puntos perdidos.
+- Puntos restantes.
+- Porcentaje de progreso.
+- Resultado académico.
+
+Las actividades adicionales podrán manejarse como puntos extra según las reglas funcionales aprobadas.
+
+## 6.2 AVERAGE
+
+En esta modalidad se utilizarán:
+
+- maxGrade.
+- passingGrade.
+- gradeValue.
+
+Las notas de las actividades utilizarán la misma escala de la materia.
+
+El promedio se calculará mediante la suma de las calificaciones válidas dividida entre la cantidad de actividades calificadas, respetando las reglas aprobadas.
+
+Las actividades pendientes de calificación no se incluirán como cero.
+
+Las actividades no entregadas sí se considerarán con calificación cero.
+
+# 7. ESTRUCTURA DE DISPONIBILIDAD
+
+Entidad: Availability
+
+La disponibilidad se organizará por días de la semana.
+
+Estructura conceptual:
+
+availability = {
+  monday: [],
+  tuesday: [],
+  wednesday: [],
+  thursday: [],
+  friday: [],
+  saturday: [],
+  sunday: []
+}
+
+Cada intervalo tendrá:
+
+id:
+Identificador único.
+
+startTime:
+Hora de inicio.
+
+endTime:
+Hora de finalización.
+
+Reglas:
+
+1. Los intervalos deberán ser válidos.
+2. La hora de finalización deberá ser posterior a la inicial.
+3. No deberán existir intervalos superpuestos.
+4. La disponibilidad representará el tiempo libre del estudiante.
+5. No será necesario registrar separadamente los horarios de trabajo o clases.
+6. Los cambios se aplicarán al guardar la configuración.
+
+# 8. ESTRUCTURA DE SESIONES
+
+Entidad: StudySession
+
+Propiedades:
+
+id:
+Identificador único.
+
+activityId:
+Actividad relacionada.
+
+date:
+Fecha programada.
+
+startTime:
+Hora de inicio.
+
+endTime:
+Hora de finalización.
+
+durationMinutes:
+Duración de la sesión.
+
+status:
+Estado de la sesión.
+
+Valores permitidos:
+- PENDING
+- COMPLETED
+
+Reglas:
+
+1. Cada sesión deberá pertenecer a una actividad existente.
+2. Las sesiones deberán respetar la disponibilidad configurada.
+3. Se podrán modificar las sesiones.
+4. Se podrá modificar la cantidad de sesiones de una actividad.
+5. La planificación podrá recalcularse cuando cambien las condiciones.
+6. Las sesiones completadas podrán identificarse desde el detalle de la actividad.
+7. Al eliminar una actividad se eliminarán sus sesiones.
+
+# 9. ESTRUCTURA DE NOTIFICACIONES
+
+Entidad: Notification
+
+Propiedades:
+
+id:
+Identificador único.
+
+type:
+Tipo de notificación.
+
+Valores previstos:
+- UPCOMING_DUE_DATE
+- URGENT_ACTIVITY
+- UPCOMING_SESSION
+
+title:
+Título de la notificación.
+
+message:
+Contenido del aviso.
+
+relatedActivityId:
+Identificador de actividad relacionada, cuando corresponda.
+
+relatedSessionId:
+Identificador de sesión relacionada, cuando corresponda.
+
+createdAt:
+Fecha y hora de generación.
+
+isRead:
+Indica si fue consultada.
+
+Reglas:
+
+1. Las notificaciones serán internas.
+2. No se enviarán notificaciones externas.
+3. Se evitarán avisos repetidos.
+4. Se respetará la ventana de notificación aprobada.
+5. Las notificaciones relacionadas con registros eliminados deberán actualizarse o desaparecer.
+
+# 10. CÁLCULOS DERIVADOS
+
+Los siguientes valores no necesitan almacenarse permanentemente en las entidades.
+
+Se calcularán utilizando los datos existentes.
+
+ACTIVIDADES:
+
+- IPA.
+- Posición en la lista de prioridades.
+- Días restantes.
+- Estado de vencimiento.
+- Tiempo pendiente de planificación.
+
+MATERIAS:
+
+- Puntos obtenidos.
+- Puntos perdidos.
+- Puntos restantes.
+- Promedio actual.
+- Porcentaje de progreso.
+- Resultado académico.
+
+SESIONES:
+
+- Sesiones completadas.
+- Sesiones pendientes.
+- Tiempo planificado.
+- Tiempo realizado.
+
+Estos resultados deberán actualizarse cuando cambien los datos que los originan.
+
+# 11. IDENTIFICADORES
+
+Todas las entidades tendrán identificadores únicos.
+
+Se utilizarán identificadores de tipo string.
+
+Los identificadores permitirán relacionar:
+
+- Materias con actividades.
+- Actividades con sesiones.
+- Actividades con notificaciones.
+
+No se utilizarán nombres de materias o actividades como identificadores.
+
+# 12. DATOS INICIALES
+
+El archivo initialData.js contendrá el estado inicial de demostración.
+
+Deberá incluir información suficiente para probar:
+
+- Materias en ambas modalidades de calificación.
+- Actividades con distintas fechas de entrega.
+- Diferentes niveles de esfuerzo.
+- Actividades entregadas.
+- Actividades no entregadas.
+- Actividades pendientes de calificación.
+- Sesiones programadas.
+- Disponibilidad semanal.
+- Notificaciones internas.
+- Materias finalizadas.
+
+Los identificadores y relaciones deberán ser coherentes.
+
+# 13. REGLAS DE INTEGRIDAD
+
+Las siguientes condiciones serán obligatorias:
+
+1. No podrán existir actividades asociadas a materias inexistentes.
+2. No podrán existir sesiones asociadas a actividades inexistentes.
+3. No podrán existir referencias inválidas entre entidades.
+4. Los valores académicos deberán respetar la escala correspondiente.
+5. Los estados deberán utilizar exclusivamente los valores permitidos.
+6. Las operaciones de eliminación deberán contemplar los registros asociados.
+7. Las modificaciones deberán reflejarse en todas las pantallas relacionadas.
+8. Las materias finalizadas deberán conservar su información.
+9. Los cálculos deberán utilizar exclusivamente los datos válidos.
+10. Los datos iniciales no deberán modificarse al editar la información durante una sesión.
+
+# 14. RESPONSABILIDAD DE IMPLEMENTACIÓN
+
+La implementación de estas estructuras corresponderá principalmente a:
+
+initialData.js:
+Datos iniciales.
+
+AppContext.jsx:
+Definición del contexto.
+
+AppProvider.jsx:
+Administración del estado.
+
+activityService.js:
+Operaciones de actividades.
+
+subjectService.js:
+Operaciones de materias.
+
+planningService.js:
+Operaciones de sesiones.
+
+notificationService.js:
+Operaciones de notificaciones.
+
+historyService.js:
+Operaciones del historial.
+
+lib:
+Cálculos derivados y validaciones.
+
+# 15. PRINCIPIO FUNDAMENTAL
+
+Todas las partes de TiempoU deberán utilizar las mismas estructuras de datos.
+
+No se permitirá que una página, componente o servicio invente una estructura alternativa para representar una entidad existente.
+
+Cualquier modificación futura del modelo deberá documentarse y revisar sus dependencias.
+
+FIN DEL DOCUMENTO.
