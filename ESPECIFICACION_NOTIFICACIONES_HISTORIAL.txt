@@ -208,10 +208,16 @@ Una actividad reactivada debe volver a la lista de pendientes y participar nueva
 
 Eliminar una materia debe eliminar sus actividades y registros asociados, incluidas las notificaciones relacionadas.
 
-## 12. Estado de aprobación
+## 12. Tiempos de anticipación y estado de aprobación
 
-Este documento establece las reglas funcionales de las notificaciones internas y del historial de actividades.
+Los tiempos de anticipación quedan definidos de la siguiente manera:
+
+Entregas próximas: generar la notificación 24 horas antes de la fecha y hora de entrega.
+
+Sesiones de estudio próximas: generar la notificación 30 minutos antes de la hora programada.
+
+Las notificaciones deben generarse una sola vez por evento y respetar las reglas de control de duplicados.
+
+Este documento establece las reglas funcionales aprobadas para las notificaciones internas y el historial de actividades.
 
 La implementación debe mantener coherencia con el motor IPA, las reglas de calificación y la planificación de sesiones.
-
-Los tiempos exactos de anticipación de las notificaciones se definirán antes de implementar esa función.
