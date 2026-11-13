@@ -171,4 +171,125 @@ Al reactivarla:
 
 - Deja de aparecer como actividad finalizada en el historial.
 - Su estado vuelve a ser Pendiente.
-- Se elimina la
+- Se elimina la calificación registrada o el cero anterior, según corresponda.
+- Vuelve a participar en la priorización IPA.
+- Se actualizan los cálculos académicos, excluyendo temporalmente esa actividad hasta que tenga un nuevo resultado definitivo.
+- Puede generar nuevas sesiones de estudio si existe disponibilidad.
+- Conserva la información original de la actividad.
+
+#### Reglas de planificación al reactivar
+
+La reactivación debe mantener coherencia con el sistema de sesiones:
+
+- Las sesiones que ya fueron realizadas se conservan.
+- Las sesiones pendientes de la planificación anterior se reorganizan o reemplazan según corresponda.
+- No se deben duplicar sesiones realizadas.
+- El esfuerzo restante se calcula teniendo en cuenta el tiempo ya invertido.
+- La nueva planificación utiliza únicamente el esfuerzo que falta por completar.
+- Si no existe disponibilidad suficiente, se informa al estudiante sin modificar el esfuerzo estimado restante.
+
+## 9. Relación entre historial y materias
+
+El historial debe conservar la relación de cada actividad con su materia.
+
+Cuando una materia se encuentre en Finalizadas, sus actividades deben seguir siendo consultables.
+
+Si se reactiva una materia, se deben recuperar sus actividades y estados anteriores.
+
+Si se reactiva una actividad perteneciente a una materia finalizada, la materia debe regresar automáticamente a En curso.
+
+La eliminación de una materia elimina también las actividades y registros relacionados, incluidas sus notificaciones y sesiones.
+
+## 10. Restricciones de implementación
+
+- Las notificaciones se mantienen únicamente en memoria durante la sesión.
+- El historial no requiere una base de datos independiente.
+- Las actividades conservan sus identificadores y relaciones.
+- No se deben duplicar notificaciones para un mismo evento.
+- Las notificaciones funcionan únicamente mientras la aplicación está abierta.
+- No se muestran alertas atrasadas cuando la aplicación se abre después del momento previsto.
+- Los cambios en el historial deben actualizar las calificaciones, el estado de la materia y el motor IPA cuando corresponda.
+- La reactivación debe conservar las sesiones realizadas y reorganizar las pendientes sin duplicarlas.
+- No se deben agregar funcionalidades de comunicación externa.
+
+## 11. Casos de prueba
+
+### Prueba 1: entrega próxima
+
+Una actividad pendiente alcanza el momento de anticipación de 24 horas antes de su entrega mientras la aplicación está abierta.
+
+Debe generarse una notificación interna.
+
+### Prueba 2: sesión próxima
+
+Una sesión pendiente alcanza el momento de anticipación de 30 minutos antes de su horario mientras la aplicación está abierta.
+
+Debe generarse una notificación interna.
+
+### Prueba 3: evitar duplicados
+
+Actualizar varias veces la pantalla no debe generar repetidamente la misma notificación.
+
+### Prueba 4: actividad entregada
+
+Una actividad marcada como Entregada deja de generar notificaciones de entrega.
+
+### Prueba 5: actividad no entregada
+
+Una actividad marcada como No entregada deja de generar notificaciones de entrega.
+
+### Prueba 6: sesión realizada
+
+Una sesión marcada como Realizada deja de generar notificaciones de sesión próxima.
+
+### Prueba 7: pendiente de calificación
+
+Una actividad Entregada sin nota debe aparecer en el historial como Pendiente de calificación y no debe contabilizarse en los resultados académicos.
+
+### Prueba 8: cargar calificación
+
+Al registrar una nota desde el historial, deben actualizarse los resultados de la materia.
+
+### Prueba 9: borrar calificación
+
+Al borrar una nota, la actividad conserva el estado Entregada y aparece como Pendiente de calificación.
+
+### Prueba 10: reactivar actividad
+
+Una actividad reactivada debe volver a la lista de pendientes, participar nuevamente en la priorización IPA y quedar disponible para una nueva planificación.
+
+### Prueba 11: conservar sesiones realizadas
+
+Al reactivar una actividad, las sesiones realizadas deben conservarse y no deben duplicarse. Las sesiones pendientes deben reorganizarse utilizando el esfuerzo restante.
+
+### Prueba 12: eliminación
+
+Eliminar una materia debe eliminar sus actividades y registros asociados, incluidas las notificaciones y sesiones relacionadas.
+
+### Prueba 13: aplicación cerrada
+
+Si TiempoU permanece cerrada cuando llega el momento de generar una notificación, esta no debe generarse posteriormente como alerta atrasada.
+
+### Prueba 14: aplicación abierta
+
+Si TiempoU permanece abierta y un evento alcanza su momento de anticipación, debe generarse la notificación una sola vez.
+
+## 12. Tiempos de anticipación y estado de aprobación
+
+Los tiempos de anticipación quedan definidos de la siguiente manera:
+
+**Entregas próximas:**
+
+Generar la notificación 24 horas antes de la fecha y hora de entrega.
+
+**Sesiones de estudio próximas:**
+
+Generar la notificación 30 minutos antes de la hora programada.
+
+Las notificaciones deben generarse una sola vez por evento y respetar las reglas de control de duplicados.
+
+Su funcionamiento queda limitado al tiempo durante el cual la aplicación permanece abierta. No se deben mostrar notificaciones atrasadas cuando el estudiante vuelva a abrir TiempoU.
+
+Este documento establece las reglas funcionales aprobadas para las notificaciones internas y el historial de actividades.
+
+La implementación debe mantener coherencia con el motor IPA, las reglas de calificación y la planificación de sesiones.
