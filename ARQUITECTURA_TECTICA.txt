@@ -1,0 +1,658 @@
+# TIEMPOU
+# ARQUITECTURA TÉCNICA DEL PROYECTO
+
+Versión: 1.0  
+Estado: Documento inicial de arquitectura  
+Tipo de proyecto: Aplicación frontend  
+Nombre: TiempoU
+
+---
+
+# 1. OBJETIVO DEL PROYECTO
+
+Construir el código fuente completo de TiempoU, una aplicación de gestión y planificación académica dirigida a estudiantes que deben organizar sus actividades universitarias y administrar su tiempo disponible.
+
+El proyecto debe implementar las funcionalidades, reglas de negocio, cálculos, pantallas, componentes visuales y procesos que fueron definidos y aprobados durante el diseño funcional de TiempoU.
+
+El resultado será un repositorio organizado, modular, documentado y funcional, preparado para su almacenamiento y control de versiones en GitHub.
+
+No se busca desarrollar una infraestructura empresarial ni una aplicación con servicios externos.
+
+# 2. TECNOLOGÍAS
+
+Se utilizarán las siguientes tecnologías:
+
+- React: construcción de la interfaz y sus componentes.
+- JavaScript: lógica funcional y operaciones.
+- CSS: estilos, distribución y diseño visual.
+- HTML: estructura base de la aplicación.
+- Vite: herramienta de configuración y ejecución del frontend.
+- GitHub: almacenamiento y control de versiones del código.
+
+No se utilizarán TypeScript, bases de datos ni servicios de backend en esta versión.
+
+# 3. ALCANCE DEL PROYECTO
+
+TiempoU será una aplicación frontend funcional.
+
+Incluirá:
+
+- Gestión de materias.
+- Gestión de actividades.
+- Sistema de priorización IPA.
+- Protección de urgencia.
+- Dos modalidades de calificación.
+- Registro de entregas y calificaciones.
+- Historial académico.
+- Configuración de disponibilidad semanal.
+- Generación de sesiones de estudio.
+- Seguimiento de sesiones.
+- Cálculo del progreso académico.
+- Notificaciones internas.
+- Navegación entre pantallas.
+- Formularios y ventanas emergentes.
+- Datos de demostración precargados.
+
+No incluirá:
+
+- Registro de usuarios.
+- Inicio de sesión.
+- Contraseñas.
+- Autenticación.
+- Base de datos.
+- Servidores.
+- API externa.
+- Almacenamiento permanente.
+- Sincronización entre dispositivos.
+- Pagos.
+
+# 4. MODELO DE DATOS
+
+La aplicación manejará información global durante la sesión.
+
+Los datos se cargarán automáticamente desde un conjunto inicial de demostración.
+
+Se utilizará un estado centralizado en memoria para compartir la información entre las diferentes páginas y componentes.
+
+Reglas:
+
+1. Los datos iniciales deben ser coherentes entre sí.
+2. Las materias tendrán actividades relacionadas.
+3. Las actividades tendrán fechas, esfuerzos, pesos académicos y estados.
+4. Las operaciones deben actualizar el estado central.
+5. Los cambios deben reflejarse en todas las pantallas correspondientes.
+6. Al recargar o cerrar la aplicación, los cambios se perderán.
+7. Al iniciar nuevamente, se cargarán los datos iniciales.
+
+No se utilizará localStorage, sessionStorage, IndexedDB ni otro mecanismo de persistencia.
+
+# 5. ARQUITECTURA GENERAL
+
+La aplicación tendrá una arquitectura modular.
+
+Cada archivo tendrá una responsabilidad específica.
+
+Se evitará:
+
+- Duplicar cálculos.
+- Repetir reglas de negocio.
+- Crear estructuras de datos diferentes para una misma entidad.
+- Colocar toda la lógica dentro de los componentes visuales.
+- Crear dependencias circulares.
+- Mantener cálculos independientes para cada pantalla.
+
+La lógica académica estará separada de la interfaz.
+
+Los componentes visuales solicitarán operaciones a los servicios correspondientes y recibirán información del estado central.
+
+# 6. ESTRUCTURA DEL REPOSITORIO
+
+TiempoU/
+
+├── public/
+│   └── assets/
+│
+├── src/
+│   │
+│   ├── components/
+│   │   ├── activities/
+│   │   ├── subjects/
+│   │   ├── planning/
+│   │   ├── layout/
+│   │   ├── notifications/
+│   │   └── common/
+│   │
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Activities.jsx
+│   │   ├── Subjects.jsx
+│   │   ├── SubjectDetail.jsx
+│   │   ├── Planning.jsx
+│   │   ├── Availability.jsx
+│   │   ├── History.jsx
+│   │   └── Notifications.jsx
+│   │
+│   ├── services/
+│   │   ├── activityService.js
+│   │   ├── subjectService.js
+│   │   ├── planningService.js
+│   │   ├── notificationService.js
+│   │   └── historyService.js
+│   │
+│   ├── lib/
+│   │   ├── ipa.js
+│   │   ├── grades.js
+│   │   ├── scheduler.js
+│   │   ├── dateUtils.js
+│   │   └── validators.js
+│   │
+│   ├── store/
+│   │   ├── AppContext.jsx
+│   │   ├── AppProvider.jsx
+│   │   └── initialData.js
+│   │
+│   ├── styles/
+│   │   ├── global.css
+│   │   ├── variables.css
+│   │   ├── layout.css
+│   │   └── components.css
+│   │
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── package.json
+├── index.html
+├── README.md
+└── ARQUITECTURA_TECNICA.txt
+
+Esta estructura constituye la organización inicial oficial. Los archivos podrán ampliarse cuando una necesidad funcional lo justifique, pero no se crearán archivos innecesarios.
+
+# 7. RESPONSABILIDAD DE CADA MÓDULO
+
+## 7.1 Components
+
+Contendrá los elementos visuales reutilizables.
+
+Activities:
+- Tarjetas de actividades.
+- Formularios de creación y edición.
+- Información de prioridad.
+- Acciones de entrega y eliminación.
+- Detalles de actividad.
+
+Subjects:
+- Tarjetas de materias.
+- Formularios de creación y edición.
+- Información académica.
+- Listado de actividades por materia.
+
+Planning:
+- Sesiones de estudio.
+- Distribución del tiempo.
+- Seguimiento de sesiones.
+- Edición de sesiones.
+
+Layout:
+- Menú de navegación.
+- Encabezado.
+- Estructura general.
+- Elementos compartidos entre páginas.
+
+Notifications:
+- Indicadores de notificaciones.
+- Avisos internos.
+- Ventana de notificaciones.
+
+Common:
+- Botones.
+- Ventanas emergentes.
+- Campos de formulario.
+- Etiquetas de estado.
+- Mensajes de confirmación.
+- Elementos reutilizables.
+
+## 7.2 Pages
+
+Contendrá las páginas principales.
+
+Home.jsx:
+Pantalla inicial con resumen general de las actividades y prioridades.
+
+Activities.jsx:
+Gestión general de actividades.
+
+Subjects.jsx:
+Listado de materias, con separación entre materias en curso y finalizadas.
+
+SubjectDetail.jsx:
+Información de una materia y sus actividades.
+
+Planning.jsx:
+Visualización y gestión de las sesiones de estudio.
+
+Availability.jsx:
+Configuración de disponibilidad semanal.
+
+History.jsx:
+Historial de actividades entregadas, no entregadas y materias finalizadas.
+
+Notifications.jsx:
+Visualización de notificaciones internas.
+
+## 7.3 Services
+
+Contendrá las operaciones de gestión de información.
+
+activityService.js:
+Crear, modificar, eliminar y actualizar actividades.
+
+subjectService.js:
+Crear, modificar, eliminar, finalizar y reactivar materias.
+
+planningService.js:
+Generar, modificar y actualizar sesiones.
+
+notificationService.js:
+Evaluar las condiciones de notificación y generar avisos internos.
+
+historyService.js:
+Gestionar los registros históricos y sus operaciones.
+
+Los servicios no deben duplicar los cálculos implementados en lib.
+
+## 7.4 Lib
+
+Contendrá las funciones de cálculo y las reglas técnicas.
+
+ipa.js:
+Cálculo del Índice de Priorización de Actividades.
+
+grades.js:
+Cálculos de notas, puntos, porcentajes y progreso académico.
+
+scheduler.js:
+Distribución de actividades en sesiones de estudio.
+
+dateUtils.js:
+Operaciones con fechas, diferencias de días y vencimientos.
+
+validators.js:
+Validaciones de formularios, fechas, valores y datos.
+
+## 7.5 Store
+
+Será responsable de administrar los datos compartidos.
+
+AppContext.jsx:
+Definición del contexto global.
+
+AppProvider.jsx:
+Administración del estado y operaciones compartidas.
+
+initialData.js:
+Datos iniciales de demostración.
+
+El estado central será la única fuente de información de las entidades principales.
+
+## 7.6 Styles
+
+Contendrá los estilos generales y específicos.
+
+variables.css:
+Colores, tipografías, tamaños, espacios y variables visuales.
+
+global.css:
+Estilos generales.
+
+layout.css:
+Distribución de las páginas.
+
+components.css:
+Estilos de componentes compartidos.
+
+El diseño deberá mantener una identidad visual coherente en toda la aplicación.
+
+# 8. REGLAS FUNCIONALES QUE DEBE RESPETAR EL CÓDIGO
+
+## 8.1 Priorización IPA
+
+El sistema utilizará la fórmula aprobada:
+
+IPA = 0.35U + 0.20P + 0.45R
+
+Donde:
+
+U = Urgencia.
+P = Peso académico.
+R = Presión del esfuerzo.
+
+Los porcentajes representan:
+
+- Urgencia: 35 %.
+- Peso académico: 20 %.
+- Presión del esfuerzo: 45 %.
+
+La urgencia se calculará considerando los intervalos de tiempo hasta la fecha de entrega.
+
+La fecha de entrega será obligatoria.
+
+El peso académico deberá respetar el máximo establecido para la materia.
+
+El esfuerzo tendrá en cuenta el tiempo estimado de realización y la disponibilidad configurada.
+
+La ausencia de intervalos de disponibilidad no debe impedir el funcionamiento de la aplicación. En ese caso se aplicarán los valores de contingencia aprobados: D = 0 y R = 100.
+
+La clasificación deberá respetar la protección de urgencia:
+
+- Una actividad que vence hoy tendrá prioridad sobre otra que vence mañana.
+- Una actividad que vence en un día conservará prioridad frente a otra que vence en tres días, aunque esta última tenga mayor peso o esfuerzo.
+- Cuando exista una diferencia de al menos tres días, los demás factores podrán adquirir mayor relevancia según las reglas aprobadas.
+
+El resultado será una lista general de actividades ordenadas por prioridad.
+
+Los empates no deberán generar errores.
+
+La implementación deberá respetar los ejemplos de validación aprobados y no inventar una fórmula alternativa.
+
+## 8.2 Modalidades de calificación
+
+Solo existirán dos modalidades.
+
+MODALIDAD 1: ACUMULACIÓN DE PUNTOS
+
+La materia tendrá:
+
+- Puntaje máximo.
+- Puntaje mínimo para aprobar.
+- Actividades con valores individuales.
+
+El sistema calculará:
+
+- Puntos obtenidos.
+- Puntos perdidos.
+- Puntos restantes.
+- Porcentaje de progreso.
+- Resultado académico.
+
+Las actividades adicionales podrán manejarse como puntos extra sin alterar indebidamente el cálculo principal.
+
+MODALIDAD 2: PROMEDIO DE CALIFICACIONES
+
+Las actividades utilizarán la misma escala de calificación de la materia.
+
+El sistema calculará el promedio correspondiente.
+
+Ejemplos de escalas:
+
+- 0 a 5.
+- 0 a 10.
+
+Las notas superiores al máximo permitido deberán rechazarse.
+
+La modalidad de calificación quedará bloqueada después de crear la materia.
+
+Los valores y las calificaciones individuales podrán modificarse.
+
+Los cálculos se actualizarán automáticamente.
+
+## 8.3 Estados de las actividades
+
+Las actividades tendrán estados diferenciados.
+
+PENDIENTE:
+Actividad todavía no entregada y dentro de su periodo correspondiente.
+
+ENTREGADA:
+La actividad pasa al historial y queda pendiente de calificación.
+
+PENDIENTE DE CALIFICACIÓN:
+Estado de una actividad entregada que todavía no tiene nota.
+
+NO ENTREGADA:
+Se registra una calificación de cero.
+
+El sistema no debe asignar automáticamente cero a una actividad simplemente porque haya vencido su fecha.
+
+Desde el historial se permitirá:
+
+- Registrar una nota.
+- Activar nuevamente una actividad.
+- Corregir su estado.
+- Borrar la nota actual.
+
+Borrar una nota no debe devolver automáticamente la actividad al estado pendiente.
+
+## 8.4 Estados de las materias
+
+Las materias podrán encontrarse:
+
+- En curso.
+- Finalizadas.
+
+Una materia solamente podrá finalizarse cuando todas sus actividades tengan registrado un resultado de entrega: Entregada o No entregada.
+
+Las materias finalizadas pasarán al historial.
+
+Se permitirá reactivarlas conservando su información anterior.
+
+Al eliminar una materia se eliminarán también sus actividades y registros asociados.
+
+Al eliminar una actividad se eliminarán sus registros asociados.
+
+## 8.5 Disponibilidad semanal
+
+La disponibilidad se configurará por días de la semana y mediante intervalos horarios.
+
+El estudiante ingresará sus horas disponibles, sin necesidad de registrar separadamente sus horarios laborales o de clases.
+
+Los cambios se aplicarán al guardar la configuración.
+
+No se realizarán recálculos completos innecesarios antes de confirmar los cambios.
+
+## 8.6 Planificación de sesiones
+
+El sistema podrá distribuir las actividades en sesiones de estudio.
+
+Reglas:
+
+- Se respetará la disponibilidad configurada.
+- Se tendrá en cuenta el tiempo estimado de cada actividad.
+- Se permitirá modificar el número de sesiones.
+- Se recalculará la distribución cuando corresponda.
+- Las sesiones podrán editarse.
+- El estudiante podrá marcar una sesión como realizada desde el detalle de la actividad.
+- El seguimiento se realizará mediante una ventana emergente o modal.
+
+No se mostrará una lista excesivamente extensa de sesiones en cada actividad.
+
+## 8.7 Notificaciones
+
+Las notificaciones serán internas y simuladas.
+
+Se generarán para situaciones relevantes:
+
+- Fechas de entrega próximas.
+- Actividades urgentes.
+- Sesiones próximas.
+
+Se respetará la ventana de notificación definida.
+
+Se evitarán avisos repetidos innecesarios.
+
+No se implementará un servicio externo de notificaciones push.
+
+# 9. COMUNICACIÓN ENTRE LOS MÓDULOS
+
+La comunicación seguirá este principio:
+
+INTERFAZ → SERVICIOS → LIB → ESTADO CENTRAL → INTERFAZ ACTUALIZADA.
+
+Ejemplo:
+
+Cuando el estudiante crea una actividad:
+
+1. El formulario recoge los datos.
+2. activityService valida la operación.
+3. Se consulta la lógica correspondiente de lib.
+4. Se actualiza el estado central.
+5. Se recalcula la información afectada.
+6. Las páginas y componentes reciben los datos actualizados.
+
+Ninguna página deberá mantener una copia independiente de las materias o actividades.
+
+# 10. INTEGRIDAD Y COHERENCIA DEL CÓDIGO
+
+Se establecen las siguientes reglas obligatorias:
+
+1. Los nombres de variables y propiedades serán consistentes.
+2. Las entidades tendrán estructuras de datos únicas.
+3. Los servicios serán responsables de las operaciones.
+4. Los módulos lib serán responsables de los cálculos.
+5. Los componentes no duplicarán reglas de negocio.
+6. Las páginas compartirán el mismo estado central.
+7. Todas las importaciones deberán corresponder a archivos existentes.
+8. No se crearán dependencias circulares.
+9. Las modificaciones deberán revisar los archivos relacionados.
+10. Los archivos entregados para reemplazo deberán contener su código completo y actualizado.
+11. No se eliminarán funcionalidades aprobadas sin autorización.
+12. Los errores deberán manejarse sin bloquear innecesariamente la aplicación.
+
+# 11. DATOS DE DEMOSTRACIÓN
+
+El archivo initialData.js contendrá información precargada.
+
+Los datos deberán permitir demostrar todas las funcionalidades principales.
+
+Incluirán:
+
+- Varias materias.
+- Actividades con diferentes fechas de entrega.
+- Diferentes pesos académicos.
+- Diferentes esfuerzos estimados.
+- Actividades pendientes.
+- Actividades entregadas.
+- Actividades no entregadas.
+- Materias en curso.
+- Materias finalizadas.
+- Calificaciones.
+- Disponibilidad semanal.
+- Sesiones de estudio.
+
+Los datos deberán ser coherentes y permitir comprobar los cálculos.
+
+Al iniciar la aplicación se utilizará siempre este conjunto inicial.
+
+Los cambios realizados durante la sesión no modificarán el conjunto original.
+
+# 12. DISEÑO Y EXPERIENCIA DE USUARIO
+
+La aplicación deberá tener una identidad visual uniforme.
+
+Se priorizarán:
+
+- Interfaz clara.
+- Navegación sencilla.
+- Información organizada.
+- Botones visibles.
+- Formularios comprensibles.
+- Ventanas emergentes funcionales.
+- Acciones de edición y eliminación accesibles.
+- Diseño adaptable a diferentes tamaños de pantalla.
+
+La pantalla Inicio deberá mostrar un resumen general sin saturar visualmente al usuario.
+
+No se incorporarán funciones adicionales que no hayan sido aprobadas.
+
+# 13. ORDEN DE CONSTRUCCIÓN
+
+El proyecto se desarrollará en el siguiente orden:
+
+ETAPA 1. Estructura y configuración.
+- package.json
+- index.html
+- main.jsx
+- App.jsx
+
+ETAPA 2. Modelos y datos.
+- initialData.js
+- AppContext.jsx
+- AppProvider.jsx
+
+ETAPA 3. Lógica de negocio.
+- dateUtils.js
+- validators.js
+- ipa.js
+- grades.js
+- scheduler.js
+
+ETAPA 4. Servicios.
+- activityService.js
+- subjectService.js
+- planningService.js
+- notificationService.js
+- historyService.js
+
+ETAPA 5. Componentes.
+- Layout.
+- Common.
+- Subjects.
+- Activities.
+- Planning.
+- Notifications.
+
+ETAPA 6. Páginas.
+- Inicio.
+- Actividades.
+- Materias.
+- Detalle de materia.
+- Planificación.
+- Disponibilidad.
+- Historial.
+- Notificaciones.
+
+ETAPA 7. Diseño visual.
+- Variables.
+- Estilos globales.
+- Distribución.
+- Componentes.
+
+ETAPA 8. Integración y pruebas.
+- Verificación de importaciones.
+- Verificación de cálculos.
+- Pruebas de operaciones.
+- Pruebas de estados.
+- Pruebas de navegación.
+- Pruebas de integración.
+
+ETAPA 9. Documentación.
+- README.md
+- Instrucciones de ejecución.
+- Descripción del proyecto.
+- Estructura del repositorio.
+
+# 14. CONTROL DE VERSIONES
+
+GitHub será el repositorio principal del proyecto.
+
+Cada entrega deberá identificar:
+
+- Nombre del archivo.
+- Ruta correspondiente.
+- Versión.
+- Funcionalidad implementada.
+- Archivos relacionados.
+- Dependencias necesarias.
+
+Cuando se modifique un archivo existente se entregará su versión completa y se identificarán los módulos que podrían necesitar actualización.
+
+No se considerará terminada una funcionalidad hasta comprobar su integración con las demás.
+
+# 15. PRINCIPIO FUNDAMENTAL DEL PROYECTO
+
+El documento funcional aprobado de TiempoU es la fuente de verdad para las reglas de negocio.
+
+Este documento establece la arquitectura técnica, pero no sustituye ni modifica las decisiones funcionales previamente aprobadas.
+
+El objetivo es construir una aplicación coherente, funcional, organizada y documentada, evitando complejidad técnica innecesaria.
+
+FIN DEL DOCUMENTO.
