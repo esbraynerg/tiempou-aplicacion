@@ -1,0 +1,412 @@
+# ESPECIFICACIÓN DE PANTALLAS Y NAVEGACIÓN – TIEMPOU
+
+## 1. Objetivo
+
+Este documento define las pantallas, secciones, ventanas y acciones principales de TiempoU.
+
+La interfaz debe ser clara, sencilla y fácil de utilizar. Cada sección debe cumplir una función concreta y evitar mostrar demasiada información al mismo tiempo.
+
+La aplicación debe permitir administrar materias, actividades, disponibilidad, sesiones, notificaciones e historial.
+
+## 2. Estructura general de navegación
+
+TiempoU tendrá las siguientes secciones principales:
+
+1. Inicio.
+2. Materias.
+3. Disponibilidad.
+4. Notificaciones.
+5. Historial.
+
+La navegación debe permitir cambiar entre estas secciones sin perder los cambios realizados durante la sesión.
+
+No se implementarán usuarios, inicio de sesión ni perfiles.
+
+## 3. Pantalla Inicio
+
+La pantalla Inicio presenta un resumen general de la situación académica del estudiante.
+
+Debe mostrar:
+
+- Resumen de materias en curso.
+- Cantidad de actividades pendientes.
+- Actividades próximas a vencer.
+- Resumen de prioridades.
+- Acceso rápido a las actividades pendientes.
+- Acceso a las notificaciones.
+
+### 3.1. Lista general de actividades
+
+Debe mostrar las actividades pendientes de todas las materias en una sola lista ordenada por el motor IPA.
+
+Cada actividad debe mostrar:
+
+- Nombre de la actividad.
+- Materia a la que pertenece.
+- Fecha de entrega.
+- Esfuerzo estimado.
+- Valor o peso académico.
+- Nivel de prioridad o valor IPA.
+
+Las actividades deben presentarse de forma compacta y ordenada.
+
+No se deben mostrar todas las sesiones de estudio en esta pantalla.
+
+### 3.2. Acciones de Inicio
+
+Debe permitir:
+
+- Abrir el detalle de una actividad.
+- Acceder a Materias.
+- Añadir una actividad.
+- Consultar notificaciones.
+- Acceder al historial.
+
+El botón Añadir actividad abre el formulario correspondiente.
+
+Si todavía no existe ninguna materia, la aplicación debe indicar que primero se debe crear una.
+
+## 4. Pantalla Materias
+
+Esta sección permite consultar y administrar las materias.
+
+Debe tener dos pestañas:
+
+- En curso.
+- Finalizadas.
+
+### 4.1. Pestaña En curso
+
+Muestra las materias que todavía se encuentran activas.
+
+Cada materia debe mostrar:
+
+- Nombre.
+- Modalidad de calificación.
+- Progreso académico.
+- Resultado provisional o definitivo, cuando corresponda.
+- Acceso al detalle.
+
+Acciones disponibles:
+
+- Abrir detalle.
+- Editar información permitida.
+- Eliminar materia.
+
+La modalidad de calificación no se puede modificar después de crear la materia.
+
+### 4.2. Pestaña Finalizadas
+
+Muestra las materias que cumplieron las condiciones de finalización.
+
+Cada materia debe mostrar:
+
+- Nombre.
+- Modalidad de calificación.
+- Resultado académico.
+- Acceso al detalle.
+- Acción para reactivar.
+- Acción para eliminar.
+
+Al reactivar una materia, esta regresa a En curso y conserva sus datos y estados anteriores.
+
+### 4.3. Crear materia
+
+Debe existir un botón Añadir materia.
+
+Al seleccionarlo se abre un formulario independiente con:
+
+- Nombre de la materia.
+- Modalidad de calificación.
+- Nota máxima.
+- Nota mínima para aprobar.
+
+Según la modalidad seleccionada, se solicitan los datos correspondientes:
+
+**Acumulación de puntos:**
+
+- Total de puntos de la materia.
+- Mínimo de puntos para aprobar.
+
+**Promedio:**
+
+- Nota máxima de la escala.
+- Nota mínima para aprobar.
+
+Los campos deben validarse antes de guardar.
+
+La materia debe crearse inicialmente en estado En curso.
+
+## 5. Detalle de materia
+
+Al seleccionar una materia se abre su detalle.
+
+Debe mostrar:
+
+- Nombre.
+- Modalidad de calificación.
+- Nota máxima o total de puntos.
+- Mínimo para aprobar.
+- Resultado académico.
+- Progreso.
+- Lista de actividades asociadas.
+
+La información debe adaptarse a la modalidad de calificación.
+
+### 5.1. Actividades de la materia
+
+Cada actividad debe mostrar:
+
+- Nombre.
+- Fecha de entrega.
+- Esfuerzo estimado.
+- Valor académico.
+- Prioridad.
+- Estado de entrega.
+
+Las actividades deben presentarse en filas o elementos compactos.
+
+Acciones disponibles:
+
+- Abrir detalle de actividad.
+- Editar actividad.
+- Marcar como Entregada.
+- Marcar como No entregada.
+- Eliminar actividad.
+
+Las acciones deben mostrarse de manera visible y compacta, preferiblemente en una misma fila cuando el espacio lo permita.
+
+### 5.2. Añadir actividad
+
+Debe existir un botón Añadir actividad.
+
+El formulario debe permitir registrar:
+
+- Nombre.
+- Materia asociada.
+- Fecha de entrega.
+- Valor académico.
+- Esfuerzo estimado en horas.
+- Configuración particular del límite diario, si se necesita.
+
+La materia debe existir antes de crear una actividad.
+
+La materia puede quedar seleccionada automáticamente cuando se abre el formulario desde su detalle.
+
+La suma de valores de las actividades ordinarias debe respetar las reglas de la modalidad de calificación.
+
+## 6. Detalle de actividad
+
+Al seleccionar una actividad se abre una ventana o vista de detalle.
+
+Debe mostrar:
+
+- Nombre.
+- Materia.
+- Fecha de entrega.
+- Esfuerzo estimado.
+- Valor académico.
+- Prioridad IPA.
+- Estado de entrega.
+- Información de las sesiones planificadas.
+
+Acciones disponibles:
+
+- Editar información.
+- Marcar como Entregada.
+- Marcar como No entregada.
+- Consultar y editar sesiones.
+- Eliminar actividad.
+
+### 6.1. Sesiones de estudio
+
+Desde el detalle se debe poder abrir una ventana o modal para consultar las sesiones.
+
+Debe mostrar:
+
+- Cantidad de sesiones.
+- Fecha de cada sesión.
+- Duración.
+- Estado: Pendiente o Realizada.
+
+Acciones:
+
+- Marcar sesión como realizada.
+- Modificar la cantidad de sesiones.
+- Ajustar la distribución cuando sea necesario.
+
+Las sesiones no deben ocupar la lista general de actividades.
+
+## 7. Formulario Añadir actividad
+
+Debe abrirse en una ventana independiente o modal.
+
+Debe permitir:
+
+- Seleccionar una materia existente.
+- Escribir el nombre de la actividad.
+- Seleccionar la fecha de entrega.
+- Registrar el valor académico.
+- Registrar el esfuerzo estimado.
+- Definir un límite diario particular, si corresponde.
+
+Validaciones:
+
+- No permitir crear actividades sin materia.
+- No permitir fechas de entrega vacías.
+- No permitir esfuerzo igual o inferior a cero.
+- Validar el valor académico según la modalidad de la materia.
+- No permitir que la suma de los valores ordinarios exceda o sea incompatible con el total configurado.
+
+Al guardar, la actividad aparece en la materia correspondiente y en la lista general de Inicio.
+
+El motor IPA y la planificación deben actualizarse cuando corresponda.
+
+## 8. Pantalla Disponibilidad
+
+Debe permitir configurar las horas libres del estudiante.
+
+Debe mostrar:
+
+- Los siete días de la semana.
+- Los intervalos registrados para cada día.
+- Acciones para agregar, editar y eliminar intervalos.
+- Límite general de horas de estudio por día.
+- Botón Guardar.
+
+Los cambios se aplican al guardar.
+
+Después de guardar, se actualizan las variables de prioridad y la planificación de sesiones.
+
+No se deben solicitar horarios de trabajo o clases por separado.
+
+## 9. Pantalla Notificaciones
+
+Debe mostrar las notificaciones internas generadas por TiempoU.
+
+Se contemplan:
+
+- Entregas próximas.
+- Sesiones de estudio próximas.
+
+Cada notificación debe mostrar la información necesaria para identificar el evento.
+
+Tiempos de anticipación aprobados:
+
+- Entregas: 24 horas antes.
+- Sesiones: 30 minutos antes.
+
+Las notificaciones deben evitar duplicados y actualizarse cuando cambien los eventos asociados.
+
+Al seleccionar una notificación, debe poder abrirse la actividad correspondiente.
+
+## 10. Pantalla Historial
+
+Debe mostrar las actividades que tienen un estado de entrega registrado.
+
+Se contemplan:
+
+- Actividades Entregadas pendientes de calificación.
+- Actividades Entregadas con calificación.
+- Actividades No entregadas.
+
+Cada actividad debe mostrar:
+
+- Nombre.
+- Materia.
+- Estado de entrega.
+- Calificación, cuando exista.
+
+Acciones disponibles:
+
+- Cargar calificación.
+- Modificar calificación.
+- Borrar calificación.
+- Reactivar actividad.
+
+Las acciones deben respetar las reglas de calificación y estados definidas en el documento ESPECIFICACION_CALIFICACIONES.txt.
+
+Las actividades reactivadas regresan a la lista de pendientes.
+
+## 11. Formularios y ventanas independientes
+
+Para mantener la interfaz organizada, las siguientes operaciones deben abrir formularios o ventanas independientes:
+
+- Añadir materia.
+- Añadir actividad.
+- Configurar disponibilidad.
+- Consultar sesiones de una actividad.
+- Registrar o modificar calificación.
+
+Las ventanas deben ser claras, mostrar únicamente los campos necesarios y disponer de acciones para guardar o cancelar.
+
+No se deben mezclar todos los formularios en una sola pantalla.
+
+## 12. Acciones de eliminación
+
+Al eliminar una materia o actividad, debe solicitarse confirmación.
+
+La confirmación debe indicar qué elemento se eliminará.
+
+La eliminación debe respetar las reglas de integridad:
+
+- Eliminar una actividad elimina sus sesiones y registros asociados.
+- Eliminar una materia elimina sus actividades y registros relacionados.
+- Las notificaciones relacionadas también deben actualizarse.
+
+No deben quedar datos asociados a elementos eliminados.
+
+## 13. Reglas generales de interfaz
+
+- Mantener una navegación sencilla y consistente.
+- Evitar pantallas saturadas.
+- Utilizar botones compactos y visibles.
+- Mantener nombres de secciones claros.
+- Mostrar mensajes cuando una operación no pueda realizarse.
+- Mostrar confirmación cuando una operación importante se complete.
+- Mantener los datos actualizados después de cada operación.
+- No agregar funcionalidades que no estén definidas en los documentos aprobados.
+- La interfaz debe adaptarse a diferentes tamaños de pantalla.
+
+## 14. Comportamiento de los datos
+
+Los datos de demostración se cargarán al iniciar la aplicación.
+
+Durante el uso:
+
+- Se podrán crear materias y actividades.
+- Se podrán editar y eliminar registros.
+- Se actualizarán los cálculos y las vistas.
+- Los cambios se conservarán únicamente durante la sesión actual.
+
+Al cerrar o recargar la aplicación, los cambios realizados se perderán y se restaurarán los datos iniciales de demostración.
+
+No se utilizará almacenamiento persistente.
+
+## 15. Restricciones de implementación
+
+- Utilizar React, JavaScript, CSS y Vite.
+- Mantener la aplicación modular.
+- Separar páginas, componentes, lógica de negocio y estilos.
+- No implementar backend.
+- No implementar autenticación.
+- No utilizar bases de datos.
+- No utilizar almacenamiento persistente.
+- No agregar servicios externos.
+- Mantener coherencia con los documentos técnicos y funcionales del proyecto.
+
+## 16. Estado de aprobación
+
+Este documento define la estructura general de pantallas, navegación, formularios y acciones de TiempoU.
+
+La implementación debe respetar las funcionalidades aprobadas y mantener coherencia con:
+
+- ARQUITECTURA_TECNICA.txt
+- INVENTARIO_ARCHIVOS.txt
+- MODELO_DATOS.txt
+- ESPECIFICACION_MOTOR_IPA.txt
+- ESPECIFICACION_CALIFICACIONES.txt
+- ESPECIFICACION_DISPONIBILIDAD_SESIONES.txt
+- ESPECIFICACION_NOTIFICACIONES_HISTORIAL.txt
+
+No se deben incorporar funcionalidades adicionales sin aprobación.
