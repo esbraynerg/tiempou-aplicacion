@@ -19,8 +19,21 @@ No se implementarán:
 - Mensajes SMS.
 - Servicios externos de notificaciones.
 - Permisos de notificación del dispositivo.
+- Procesos de notificación en segundo plano.
 
-Las notificaciones se generan y muestran utilizando los datos disponibles durante la sesión.
+Las notificaciones se generan y muestran utilizando los datos disponibles durante la sesión actual.
+
+### 2.1. Condición de funcionamiento
+
+Las notificaciones funcionarán únicamente mientras TiempoU esté abierto.
+
+Reglas:
+
+- La aplicación debe comprobar los eventos próximos mientras esté en uso.
+- Si un evento entra en su ventana de anticipación mientras la aplicación está abierta, se genera la notificación correspondiente.
+- Si el estudiante abre la aplicación después de que pasó el momento previsto para generar una notificación, no se debe mostrar esa alerta atrasada.
+- No se deben recuperar ni acumular notificaciones que no se generaron mientras la aplicación estaba cerrada.
+- Las notificaciones se mantienen únicamente en memoria durante la sesión.
 
 ## 3. Tipos de notificaciones
 
@@ -28,18 +41,18 @@ Se contemplan únicamente dos tipos:
 
 ### 3.1. Entregas próximas
 
-Se genera una notificación cuando una actividad pendiente se aproxima a su fecha de entrega y entra en la ventana de anticipación establecida.
+Se genera una notificación cuando una actividad pendiente llega al momento establecido para anticipar su fecha de entrega.
 
 La notificación debe mostrar:
 
 - Nombre de la actividad.
 - Materia correspondiente.
-- Fecha de entrega.
+- Fecha y hora de entrega.
 - Indicación de que la entrega está próxima.
 
 ### 3.2. Sesiones de estudio próximas
 
-Se genera una notificación cuando una sesión pendiente se aproxima a su horario programado y entra en la ventana de anticipación establecida.
+Se genera una notificación cuando una sesión pendiente llega al momento establecido para anticipar su horario programado.
 
 La notificación debe mostrar:
 
@@ -53,11 +66,12 @@ La notificación debe mostrar:
 - No generar notificaciones para actividades eliminadas.
 - No generar notificaciones de entrega para actividades Entregadas o No entregadas.
 - No generar notificaciones de sesiones para sesiones ya realizadas.
-- No generar notificaciones de sesiones que hayan sido eliminadas o reorganizadas.
+- No generar notificaciones de sesiones eliminadas o reorganizadas.
 - Evitar notificaciones duplicadas para un mismo evento.
 - Una misma actividad puede generar una notificación de entrega y otra de sesión, porque corresponden a eventos diferentes.
 - Si cambia la fecha de entrega o el horario de una sesión, la notificación futura debe corresponder al nuevo dato.
 - Las notificaciones deben actualizarse cuando cambien los datos de la actividad o la planificación.
+- Las notificaciones no deben generarse para eventos cuyo momento de anticipación ya pasó antes de que la aplicación estuviera abierta.
 
 ## 5. Control de duplicados
 
@@ -65,9 +79,15 @@ Cada notificación debe estar asociada al evento que la originó.
 
 La aplicación debe identificar los eventos para evitar generar repetidamente la misma notificación durante una sesión.
 
-Si una notificación ya fue generada para un evento, no debe volver a generarse por cada actualización de pantalla.
+Reglas:
 
-Cuando el evento cambie de forma relevante, como una nueva fecha de entrega o una nueva programación de sesión, se debe evaluar nuevamente la notificación correspondiente.
+- Si una notificación ya fue generada para un evento, no debe volver a generarse por cada actualización de pantalla.
+- Una notificación de entrega debe estar vinculada a la actividad y a su fecha y hora de entrega.
+- Una notificación de sesión debe estar vinculada a la sesión y a su horario programado.
+- Si cambia la fecha de entrega, debe evaluarse nuevamente la notificación correspondiente.
+- Si una sesión es reorganizada, su programación anterior deja de ser válida y se evalúa la nueva programación.
+- Si una sesión se elimina, no debe generar notificaciones.
+- Si se crea una nueva sesión, puede generar su propia notificación cuando corresponda.
 
 ## 6. Presentación de notificaciones
 
@@ -96,128 +116,59 @@ Se muestran en el historial con uno de estos estados:
 
 Si todavía no tienen nota, deben permanecer como Pendiente de calificación.
 
+Las actividades Entregadas sin calificación no deben contabilizarse todavía en los resultados académicos.
+
 ### 7.2. Actividades No entregadas
 
-Se muestran en el historial con el estado No entregada y una calificación de cero.
+Se muestran en el historial con:
+
+- Estado: No entregada.
+- Calificación: cero.
+
+El cero debe participar en los cálculos académicos de acuerdo con la modalidad de calificación de la materia.
 
 ## 8. Acciones disponibles en el historial
 
-Cada actividad del historial debe permitir:
+Cada actividad del historial debe permitir las siguientes acciones:
 
 - Cargar una calificación.
 - Modificar una calificación existente.
 - Borrar la calificación.
 - Reactivar la actividad.
 
-### Cargar una calificación
+### 8.1. Cargar una calificación
 
 Permite registrar la nota obtenida por una actividad Entregada.
 
 La calificación debe respetar la modalidad y escala de la materia.
 
-Después de guardar, se actualizan los resultados académicos.
+Después de guardar, se actualizan automáticamente los resultados académicos.
 
-### Modificar una calificación
+### 8.2. Modificar una calificación
 
 Permite corregir una nota registrada.
 
 Los resultados de la materia se recalculan automáticamente.
 
-### Borrar una calificación
+### 8.3. Borrar una calificación
 
 Elimina únicamente el valor de la nota.
 
-Si la actividad estaba Entregada, conserva ese estado y vuelve a mostrarse como Pendiente de calificación.
+Si la actividad estaba Entregada:
 
-No se convierte en Pendiente ni se elimina del historial.
+- Conserva el estado Entregada.
+- Permanece en el historial.
+- Vuelve a mostrarse como Pendiente de calificación.
+- Deja de participar en los cálculos académicos hasta que se registre una nueva nota.
 
-### Reactivar una actividad
+Borrar una calificación no equivale a reactivar la actividad.
+
+### 8.4. Reactivar una actividad
 
 Permite devolver una actividad al estado Pendiente para que vuelva a estar disponible en la lista de actividades.
 
 Al reactivarla:
 
 - Deja de aparecer como actividad finalizada en el historial.
-- Vuelve a participar en la priorización IPA.
-- Puede generar nuevas sesiones de estudio si existe disponibilidad.
-- Conserva la información de la actividad.
-- Se actualizan los cálculos correspondientes.
-
-## 9. Relación entre historial y materias
-
-El historial debe conservar la relación de cada actividad con su materia.
-
-Cuando una materia se encuentre en Finalizadas, sus actividades deben seguir siendo consultables.
-
-Si se reactiva una materia, se deben recuperar sus actividades y estados anteriores.
-
-La eliminación de una materia elimina también las actividades y registros relacionados, de acuerdo con las reglas generales del proyecto.
-
-## 10. Restricciones de implementación
-
-- Las notificaciones se mantienen únicamente en memoria durante la sesión.
-- El historial no requiere una base de datos independiente.
-- Las actividades conservan sus identificadores y relaciones.
-- No se deben duplicar notificaciones para un mismo evento.
-- Los cambios en el historial deben actualizar las calificaciones, el estado de la materia y el motor IPA cuando corresponda.
-- No se deben agregar funcionalidades de comunicación externa.
-
-## 11. Casos de prueba
-
-### Prueba 1: entrega próxima
-
-Una actividad pendiente entra en la ventana de anticipación. Debe generarse una notificación interna.
-
-### Prueba 2: sesión próxima
-
-Una sesión pendiente entra en la ventana de anticipación. Debe generarse una notificación interna.
-
-### Prueba 3: evitar duplicados
-
-Actualizar varias veces la pantalla no debe generar repetidamente la misma notificación.
-
-### Prueba 4: actividad entregada
-
-Una actividad marcada como Entregada deja de generar notificaciones de entrega.
-
-### Prueba 5: actividad no entregada
-
-Una actividad marcada como No entregada deja de generar notificaciones de entrega.
-
-### Prueba 6: sesión realizada
-
-Una sesión marcada como Realizada deja de generar notificaciones de sesión próxima.
-
-### Prueba 7: pendiente de calificación
-
-Una actividad Entregada sin nota debe aparecer en el historial como Pendiente de calificación.
-
-### Prueba 8: cargar calificación
-
-Al registrar una nota desde el historial, deben actualizarse los resultados de la materia.
-
-### Prueba 9: borrar calificación
-
-Al borrar una nota, la actividad conserva el estado Entregada y aparece como Pendiente de calificación.
-
-### Prueba 10: reactivar actividad
-
-Una actividad reactivada debe volver a la lista de pendientes y participar nuevamente en la planificación.
-
-### Prueba 11: eliminación
-
-Eliminar una materia debe eliminar sus actividades y registros asociados, incluidas las notificaciones relacionadas.
-
-## 12. Tiempos de anticipación y estado de aprobación
-
-Los tiempos de anticipación quedan definidos de la siguiente manera:
-
-Entregas próximas: generar la notificación 24 horas antes de la fecha y hora de entrega.
-
-Sesiones de estudio próximas: generar la notificación 30 minutos antes de la hora programada.
-
-Las notificaciones deben generarse una sola vez por evento y respetar las reglas de control de duplicados.
-
-Este documento establece las reglas funcionales aprobadas para las notificaciones internas y el historial de actividades.
-
-La implementación debe mantener coherencia con el motor IPA, las reglas de calificación y la planificación de sesiones.
+- Su estado vuelve a ser Pendiente.
+- Se elimina la
