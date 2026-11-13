@@ -1,0 +1,357 @@
+# TIEMPOU
+# INVENTARIO TÉCNICO DE ARCHIVOS
+
+Versión: 1.0
+Estado: Inventario inicial
+Documento relacionado: ARQUITECTURA_TECNICA.txt
+
+---
+
+# 1. OBJETIVO
+
+Este documento identifica todos los archivos previstos para la construcción de TiempoU.
+
+Su finalidad es establecer:
+
+- Nombre de cada archivo.
+- Ubicación dentro del repositorio.
+- Responsabilidad específica.
+- Relación con otros archivos.
+- Orden de construcción.
+
+Este inventario complementa la arquitectura técnica y servirá como control durante el desarrollo.
+
+# 2. ESTRUCTURA GENERAL
+
+TiempoU/
+
+├── public/
+│   └── assets/
+│
+├── src/
+│   ├── components/
+│   │   ├── activities/
+│   │   ├── subjects/
+│   │   ├── planning/
+│   │   ├── layout/
+│   │   ├── notifications/
+│   │   └── common/
+│   │
+│   ├── pages/
+│   │
+│   ├── services/
+│   │
+│   ├── lib/
+│   │
+│   ├── store/
+│   │
+│   ├── styles/
+│   │
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── .gitignore
+├── package.json
+├── index.html
+├── README.md
+├── ARQUITECTURA_TECNICA.txt
+└── INVENTARIO_ARCHIVOS.txt
+
+# 3. INVENTARIO DETALLADO
+
+## 3.1 COMPONENTS
+
+### components/activities/
+
+ActivityCard.jsx
+Representación visual de una actividad, incluyendo información académica, fecha, esfuerzo, prioridad y estado.
+
+ActivityForm.jsx
+Formulario para crear y editar actividades.
+
+ActivityDetail.jsx
+Información detallada de una actividad.
+
+ActivityActions.jsx
+Acciones disponibles para una actividad, incluyendo entrega, no entrega, edición y eliminación.
+
+ActivitySessions.jsx
+Visualización de las sesiones relacionadas con una actividad.
+
+### components/subjects/
+
+SubjectCard.jsx
+Tarjeta de información de una materia.
+
+SubjectForm.jsx
+Formulario de creación y edición de materias.
+
+SubjectSummary.jsx
+Resumen académico de una materia, incluyendo modalidad de calificación y progreso.
+
+SubjectActivityList.jsx
+Listado de actividades pertenecientes a una materia.
+
+### components/planning/
+
+SessionCard.jsx
+Representación individual de una sesión de estudio.
+
+SessionForm.jsx
+Formulario para modificar una sesión.
+
+SessionProgress.jsx
+Seguimiento de sesiones realizadas y pendientes.
+
+AvailabilityForm.jsx
+Configuración de intervalos de disponibilidad semanal.
+
+### components/layout/
+
+AppLayout.jsx
+Estructura general de la aplicación.
+
+Sidebar.jsx
+Menú de navegación principal.
+
+Header.jsx
+Encabezado y elementos de acceso general.
+
+NavigationItem.jsx
+Elemento individual de navegación.
+
+### components/notifications/
+
+NotificationItem.jsx
+Representación de una notificación.
+
+NotificationPanel.jsx
+Panel de notificaciones.
+
+NotificationBadge.jsx
+Indicador visual de notificaciones pendientes.
+
+### components/common/
+
+Button.jsx
+Botones reutilizables.
+
+Modal.jsx
+Ventana emergente reutilizable.
+
+Input.jsx
+Campo de entrada de datos.
+
+Select.jsx
+Selector reutilizable.
+
+DateInput.jsx
+Campo para fechas.
+
+ConfirmDialog.jsx
+Confirmaciones de operaciones importantes.
+
+EmptyState.jsx
+Representación de pantallas sin información.
+
+StatusBadge.jsx
+Indicadores visuales de estados.
+
+ProgressBar.jsx
+Indicador de progreso.
+
+LoadingState.jsx
+Representación de estados de carga cuando sean necesarios.
+
+---
+
+## 3.2 PAGES
+
+Home.jsx
+Pantalla principal y resumen general de TiempoU.
+
+Activities.jsx
+Administración general de actividades.
+
+Subjects.jsx
+Listado de materias en curso y finalizadas.
+
+SubjectDetail.jsx
+Detalle de una materia y sus actividades.
+
+Planning.jsx
+Vista general de sesiones de estudio.
+
+Availability.jsx
+Configuración de disponibilidad semanal.
+
+History.jsx
+Historial de actividades y materias finalizadas.
+
+Notifications.jsx
+Vista general de notificaciones.
+
+---
+
+## 3.3 SERVICES
+
+activityService.js
+Operaciones de creación, modificación, eliminación y actualización de estados de actividades.
+
+subjectService.js
+Operaciones de materias, finalización, reactivación y eliminación.
+
+planningService.js
+Gestión y actualización de sesiones de estudio.
+
+notificationService.js
+Evaluación de condiciones y generación de notificaciones internas.
+
+historyService.js
+Operaciones relacionadas con el historial académico.
+
+---
+
+## 3.4 LIB
+
+ipa.js
+Cálculo del Índice de Priorización de Actividades y aplicación de las reglas de protección de urgencia.
+
+grades.js
+Cálculos de las dos modalidades de calificación y progreso académico.
+
+scheduler.js
+Distribución de actividades en sesiones de estudio.
+
+dateUtils.js
+Funciones de fechas, vencimientos y diferencias temporales.
+
+validators.js
+Validación de información y reglas de entrada.
+
+---
+
+## 3.5 STORE
+
+AppContext.jsx
+Definición del contexto global y acceso compartido al estado.
+
+AppProvider.jsx
+Proveedor del estado, operaciones compartidas y actualización de información.
+
+initialData.js
+Conjunto de datos de demostración precargados.
+
+---
+
+## 3.6 STYLES
+
+variables.css
+Variables visuales globales.
+
+global.css
+Estilos generales de la aplicación.
+
+layout.css
+Estilos de estructura y distribución.
+
+components.css
+Estilos compartidos de los componentes.
+
+---
+
+## 3.7 ARCHIVOS PRINCIPALES
+
+App.jsx
+Composición general de la aplicación y navegación entre páginas.
+
+main.jsx
+Punto de entrada de React y configuración inicial del proveedor global.
+
+index.html
+Documento HTML principal.
+
+package.json
+Configuración del proyecto, dependencias y comandos de ejecución.
+
+.gitignore
+Archivos y carpetas que Git debe ignorar.
+
+README.md
+Descripción general, funcionalidades, tecnologías e instrucciones de ejecución.
+
+ARQUITECTURA_TECNICA.txt
+Documento de arquitectura general.
+
+INVENTARIO_ARCHIVOS.txt
+Documento de control de archivos.
+
+# 4. RESPONSABILIDADES Y DEPENDENCIAS
+
+Las siguientes reglas serán obligatorias:
+
+1. Las páginas utilizarán componentes reutilizables.
+2. Los componentes no duplicarán cálculos académicos.
+3. Los servicios utilizarán las funciones de lib cuando necesiten realizar cálculos.
+4. Los servicios actualizarán la información mediante el estado central.
+5. Las páginas recibirán información del estado central.
+6. initialData.js será la fuente de los datos iniciales.
+7. AppProvider.jsx administrará los datos durante la sesión.
+8. Los estilos compartidos estarán centralizados.
+9. Las operaciones relacionadas deberán actualizar todas las vistas afectadas.
+10. Ningún archivo podrá introducir una estructura de datos incompatible con la establecida.
+
+# 5. REGLAS PARA LA GENERACIÓN DE ARCHIVOS
+
+Cada archivo generado deberá cumplir los siguientes requisitos:
+
+- Código completo.
+- Nombre y ubicación exactos.
+- Importaciones correctas.
+- Exportaciones correctamente definidas.
+- Compatibilidad con los demás módulos.
+- Responsabilidad claramente delimitada.
+- Sin funciones duplicadas.
+- Sin referencias a archivos inexistentes.
+
+Cuando se modifique un archivo, se revisarán sus dependencias.
+
+No se entregarán fragmentos incompletos para reemplazar partes de archivos sin instrucciones precisas.
+
+# 6. CONTROL DE CONSTRUCCIÓN
+
+Los archivos se marcarán como:
+
+PENDIENTE:
+Todavía no generado.
+
+GENERADO:
+Código creado y entregado.
+
+INTEGRADO:
+Conectado con sus dependencias.
+
+VERIFICADO:
+Revisado junto con los módulos relacionados.
+
+La existencia de un archivo no significa que esté terminado.
+
+# 7. CONTROL DE CAMBIOS
+
+Si durante el desarrollo se identifica la necesidad de incorporar un nuevo archivo:
+
+1. Se explicará su finalidad.
+2. Se determinará su ubicación.
+3. Se identificarán sus dependencias.
+4. Se actualizará este inventario.
+5. Se verificará que no duplique responsabilidades existentes.
+
+No se agregarán archivos sin justificación técnica.
+
+# 8. CRITERIO DE FINALIZACIÓN
+
+El inventario se considerará completado cuando todos los archivos necesarios estén generados, integrados y verificados.
+
+La aplicación completa deberá poder ejecutarse con sus dependencias correctamente configuradas y demostrar las funcionalidades aprobadas de TiempoU.
+
+FIN DEL DOCUMENTO.
