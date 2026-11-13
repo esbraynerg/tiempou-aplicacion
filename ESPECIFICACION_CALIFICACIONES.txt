@@ -1,0 +1,207 @@
+# ESPECIFICACIÓN DE CALIFICACIONES – TIEMPOU
+
+## 1. Objetivo
+
+Este documento define cómo TiempoU administra las calificaciones de las materias y sus actividades.
+
+La aplicación contempla únicamente dos modalidades:
+
+1. Acumulación de puntos.
+2. Promedio de calificaciones.
+
+La modalidad se selecciona al crear una materia y queda bloqueada posteriormente. No se permite cambiarla después de su creación.
+
+## 2. Reglas generales
+
+- Cada materia tiene una modalidad de calificación.
+- Cada materia tiene una nota máxima y una nota mínima para aprobar.
+- Los valores de las actividades deben respetar la escala de su materia.
+- No se permiten calificaciones superiores al máximo establecido.
+- Las modificaciones de valores y calificaciones actualizan automáticamente los resultados.
+- Una actividad entregada sin nota no se considera calificada.
+- Una actividad marcada como No entregada recibe una calificación de cero.
+- Las calificaciones y los resultados se calculan de manera independiente del motor IPA.
+
+## 3. Modalidad 1: acumulación de puntos
+
+### 3.1. Configuración de la materia
+
+Al crear una materia se deben registrar:
+
+- Nombre de la materia.
+- Total máximo de puntos.
+- Mínimo de puntos necesarios para aprobar.
+
+El total puede ser una escala de 10, 100, 500 u otro valor positivo definido por el estudiante.
+
+Ejemplo:
+
+- Total de la materia: 500 puntos.
+- Mínimo para aprobar: 300 puntos.
+
+### 3.2. Configuración de las actividades
+
+Cada actividad debe tener un valor máximo en puntos.
+
+La suma de los valores máximos de las actividades ordinarias debe coincidir con el total de puntos de la materia.
+
+Ejemplo:
+
+| Actividad | Valor máximo |
+|---|---:|
+| Trabajo 1 | 50 |
+| Trabajo 2 | 100 |
+| Parcial | 100 |
+| Proyecto | 150 |
+| Examen final | 100 |
+| Total | 500 |
+
+No se debe permitir guardar una configuración en la que la suma de los valores ordinarios sea diferente del total de la materia.
+
+### 3.3. Cálculo de resultados
+
+Se deben mostrar:
+
+- Puntos ganados.
+- Puntos perdidos.
+- Puntos restantes.
+- Porcentaje de progreso.
+- Estado académico: Aprobado o Desaprobado, cuando corresponda determinarlo.
+
+Reglas de cálculo:
+
+**Puntos ganados:** suma de las calificaciones obtenidas en las actividades calificadas.
+
+**Puntos perdidos:** suma de la diferencia entre el valor máximo de cada actividad y los puntos obtenidos, incluyendo las actividades marcadas como No entregada.
+
+**Puntos restantes:** puntos correspondientes a actividades que todavía no tienen un resultado definitivo, es decir, actividades pendientes o entregadas que aún no tienen calificación.
+
+**Porcentaje de progreso:** puntos ganados divididos entre el total de puntos de la materia, multiplicado por 100.
+
+La suma de puntos ganados, perdidos y restantes debe corresponder al total de puntos de la materia.
+
+### 3.4. Actividades adicionales o de puntos extra
+
+Se permiten actividades adicionales de puntos extra.
+
+Estas actividades:
+
+- No modifican el total base de puntos de la materia.
+- No forman parte de la distribución ordinaria de puntos.
+- Sus puntos obtenidos se muestran por separado.
+- No deben provocar que la suma de los valores ordinarios supere el total configurado.
+
+Los puntos extra se consideran al mostrar el resultado académico acumulado, sin modificar el total base utilizado para calcular el porcentaje de progreso.
+
+## 4. Modalidad 2: promedio de calificaciones
+
+### 4.1. Configuración de la materia
+
+Al crear una materia se debe registrar:
+
+- Nombre de la materia.
+- Nota máxima de la escala.
+- Nota mínima para aprobar.
+
+Ejemplos de escalas:
+
+- Nota máxima: 5.0.
+- Nota mínima para aprobar: 3.0.
+
+También se puede utilizar una escala de 10 u otra escala definida por el estudiante.
+
+### 4.2. Configuración de las actividades
+
+Cada actividad utiliza la misma escala de calificación que la materia.
+
+Ejemplo:
+
+- Nota máxima de la materia: 5.0.
+- Actividad 1: nota máxima 5.0.
+- Actividad 2: nota máxima 5.0.
+- Actividad 3: nota máxima 5.0.
+
+### 4.3. Cálculo del promedio
+
+El promedio se calcula mediante la media aritmética de las actividades que tienen calificación registrada.
+
+Promedio = suma de las calificaciones registradas / cantidad de actividades calificadas.
+
+Ejemplo:
+
+| Actividad | Calificación |
+|---|---:|
+| Trabajo 1 | 4.0 |
+| Trabajo 2 | 3.5 |
+| Parcial | 4.5 |
+
+Promedio = (4.0 + 3.5 + 4.5) / 3
+
+Resultado: 4.0.
+
+Las actividades entregadas que todavía no tienen nota no participan en el cálculo.
+
+Las actividades marcadas como No entregada participan con una calificación de cero.
+
+Las actividades pendientes no participan en el promedio.
+
+### 4.4. Peso académico y promedio
+
+El peso académico utilizado por el motor IPA es independiente del promedio de calificaciones.
+
+Aunque una actividad tenga un peso mayor para la priorización, el promedio de la materia continúa calculándose mediante la media aritmética de las actividades calificadas, según la regla aprobada.
+
+## 5. Estados de entrega y calificación
+
+Cada actividad puede tener uno de los siguientes estados:
+
+### Pendiente
+
+- La actividad todavía no tiene un estado de entrega registrado.
+- No se considera calificada.
+- Si vence su fecha, no se convierte automáticamente en No entregada.
+- Continúa participando en la priorización mientras corresponda.
+
+### Entregada
+
+- La actividad se considera presentada.
+- Sale de la lista de actividades pendientes.
+- Pasa al historial.
+- Si todavía no tiene nota, aparece como Pendiente de calificación.
+- No se le asigna cero automáticamente.
+- No participa en el promedio ni suma puntos ganados hasta que se registre su calificación.
+
+### No entregada
+
+- La actividad se considera no presentada.
+- Recibe una calificación de cero.
+- Se incluye en los cálculos de resultados.
+- Pasa al historial.
+
+## 6. Registro y modificación de calificaciones
+
+Desde el historial se deben permitir las siguientes acciones:
+
+- Cargar una calificación.
+- Modificar una calificación existente.
+- Borrar una calificación.
+- Reactivar una actividad.
+
+Validaciones:
+
+- No aceptar valores negativos.
+- No aceptar valores superiores al máximo permitido.
+- En acumulación de puntos, respetar el valor máximo de la actividad.
+- En promedio, respetar la nota máxima de la escala de la materia.
+
+Cuando se carga o modifica una calificación, los resultados se actualizan automáticamente.
+
+### Borrar una calificación
+
+Al borrar una nota:
+
+- Se elimina únicamente el valor de la calificación.
+- Se actualizan los resultados de la materia.
+- La actividad conserva su estado de entrega.
+- Si estaba Entregada, permanece Entregada y aparece como Pendiente de calificación.
+- No se convierte nuevamente
