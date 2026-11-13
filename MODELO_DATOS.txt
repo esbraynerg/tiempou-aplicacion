@@ -1,10 +1,12 @@
 # TIEMPOU
 # MODELO DE DATOS
 
-Versión: 1.2  
+Versión: 1.3  
 Estado: Propuesta técnica revisada  
 Documento relacionado: ARQUITECTURA_TECNICA.txt  
-Documento relacionado: INVENTARIO_ARCHIVOS.txt
+Documento relacionado: INVENTARIO_ARCHIVOS.txt  
+Documento relacionado: ESPECIFICACION_MOTOR_IPA.txt  
+Documento relacionado: ESPECIFICACION_CALIFICACIONES.txt
 
 ---
 
@@ -32,6 +34,7 @@ Su cumplimiento es obligatorio para evitar incompatibilidades entre archivos, co
 12. Los cambios realizados durante la sesión se conservarán únicamente en memoria.
 13. Las estructuras de datos deberán ser compatibles con las reglas funcionales aprobadas.
 14. Los valores derivados se calcularán a partir de los datos originales, evitando mantener resultados duplicados que puedan quedar desactualizados.
+15. Los estados y valores de las entidades deberán respetar las reglas definidas en las especificaciones funcionales.
 
 # 3. ESTRUCTURA GENERAL DEL ESTADO
 
@@ -104,17 +107,25 @@ Valores permitidos:
 
 Escala máxima de calificación cuando la modalidad sea `AVERAGE`.
 
+Será `null` cuando la modalidad sea `POINTS`.
+
 **passingGrade:**
 
 Calificación mínima para aprobar cuando la modalidad sea `AVERAGE`.
+
+Será `null` cuando la modalidad sea `POINTS`.
 
 **maxPoints:**
 
 Puntaje máximo de la materia cuando la modalidad sea `POINTS`.
 
+Será `null` cuando la modalidad sea `AVERAGE`.
+
 **passingPoints:**
 
 Puntaje mínimo para aprobar cuando la modalidad sea `POINTS`.
+
+Será `null` cuando la modalidad sea `AVERAGE`.
 
 **status:**
 
@@ -147,6 +158,7 @@ Reglas:
 10. Una materia no podrá finalizarse mientras tenga actividades en estado `PENDING`.
 11. Cuando una actividad de una materia finalizada se reactive, la materia volverá automáticamente a `IN_PROGRESS`.
 12. Si no existen actividades, la materia permanecerá en curso hasta que tenga actividades y cumpla las condiciones de finalización.
+13. La finalización de una materia no significa necesariamente que su resultado académico sea definitivo.
 
 # 5. ESTRUCTURA DE ACTIVIDADES
 
@@ -208,9 +220,15 @@ Esta propiedad se utilizará únicamente en modalidad `POINTS`.
 
 Las actividades extra no formarán parte de la distribución de puntos ordinarios ni del porcentaje de progreso de la materia.
 
+En modalidad `AVERAGE`, esta propiedad deberá permanecer en `false`.
+
 **estimatedEffortHours:**
 
 Tiempo total estimado para realizar la actividad, expresado en horas.
+
+Representa la estimación total de esfuerzo de la actividad, no el esfuerzo restante.
+
+No deberá reducirse automáticamente cuando se complete una sesión.
 
 **desiredSessionsCount:**
 
@@ -242,6 +260,12 @@ Su interpretación dependerá de la modalidad:
 - En `POINTS`, representa los puntos obtenidos.
 - En `AVERAGE`, representa la nota obtenida en la escala de la materia.
 
+La relación entre estado y calificación será:
+
+- `PENDING`: `gradeValue = null`.
+- `DELIVERED`: puede tener una calificación válida o `null`.
+- `NOT_DELIVERED`: `gradeValue = 0`.
+
 **dailyStudyHoursLimitOverride:**
 
 Límite diario particular de estudio para esta actividad.
@@ -251,6 +275,8 @@ Puede ser `null` cuando se utilice el límite general configurado.
 **createdAt:**
 
 Fecha y hora de creación.
+
+Se utilizará como criterio de desempate cuando dos actividades tengan la misma prioridad y las mismas condiciones de urgencia.
 
 Reglas:
 
@@ -269,6 +295,10 @@ Reglas:
 13. La fecha y hora de entrega se utilizarán para calcular la urgencia, el tiempo disponible y las notificaciones.
 14. Una actividad en estado `PENDING` permanecerá en la lista de pendientes aunque su fecha de entrega haya vencido, hasta que se registre su resultado de entrega.
 15. Las actividades extra solo estarán permitidas en modalidad `POINTS`.
+16. Las actividades ordinarias de una materia `POINTS` deberán tener `isExtraCredit = false`.
+17. Las actividades extra de una materia `POINTS` deberán tener `isExtraCredit = true`.
+18. En modalidad `AVERAGE`, todas las actividades deberán tener `isExtraCredit = false`.
+19. El valor de `gradeValue` nunca podrá ser negativo ni superar el máximo permitido para la actividad.
 
 El estado `PENDING` representa una actividad todavía no entregada.
 
@@ -324,11 +354,14 @@ Donde `completedSessionHours` representa la suma de la duración de las sesiones
 
 Reglas:
 
-1. Las sesiones pendientes no reducirán el esfuerzo restante.
-2. Las sesiones completadas sí reducirán el esfuerzo restante.
-3. El esfuerzo restante nunca podrá ser negativo.
-4. Al reactivar una actividad se conservarán las sesiones completadas y se utilizará el esfuerzo restante para generar la nueva planificación.
-5. Si el esfuerzo restante es cero, no será necesario generar nuevas sesiones automáticamente.
+1. `estimatedEffortHours` representa siempre el esfuerzo total estimado de la actividad.
+2. Las sesiones pendientes no reducirán el esfuerzo restante.
+3. Las sesiones completadas sí reducirán el esfuerzo restante.
+4. El esfuerzo restante nunca podrá ser negativo.
+5. Completar una sesión no modificará `estimatedEffortHours`.
+6. Si el usuario modifica la estimación total, el esfuerzo restante se calculará nuevamente utilizando la nueva estimación y las sesiones completadas existentes.
+7. Al reactivar una actividad se conservarán las sesiones completadas y se utilizará el esfuerzo restante para generar la nueva planificación.
+8. Si el esfuerzo restante es cero, no será necesario generar nuevas sesiones automáticamente.
 
 # 6. MODALIDADES DE CALIFICACIÓN
 
@@ -344,7 +377,7 @@ En esta modalidad se utilizarán:
 
 Las actividades ordinarias deberán distribuir el total de puntos establecido para la materia.
 
-La suma de los valores `academicWeight` de las actividades ordinarias deberá coincidir con `maxPoints`.
+La suma de los valores `academicWeight` de las actividades ordinarias deberá coincidir con `maxPoints` cuando la distribución esté completa.
 
 Las actividades extra podrán aportar puntos adicionales sin modificar el total base.
 
@@ -363,6 +396,7 @@ El sistema calculará:
 - Puntos obtenidos en actividades ordinarias.
 - Puntos perdidos.
 - Puntos restantes.
+- Puntos por distribuir.
 - Porcentaje de progreso sobre el total base.
 - Puntos extra obtenidos.
 - Resultado académico.
@@ -375,6 +409,12 @@ Las actividades pendientes de calificación no se contabilizarán como cero ni p
 
 Las actividades no entregadas se contabilizarán con cero.
 
+Los puntos restantes incluirán los valores máximos de las actividades que todavía no tengan un resultado definitivo y los puntos que no hayan sido distribuidos entre actividades.
+
+Los puntos perdidos se calcularán únicamente a partir de actividades ordinarias con resultado definitivo.
+
+Los puntos extra obtenidos se sumarán al resultado académico acumulado para determinar si se alcanza el mínimo de aprobación, pero no modificarán los puntos perdidos ni los restantes.
+
 ## 6.2. AVERAGE
 
 En esta modalidad se utilizarán:
@@ -386,7 +426,7 @@ En esta modalidad se utilizarán:
 
 Las notas de las actividades utilizarán la misma escala de la materia.
 
-El promedio se calculará mediante la suma de las calificaciones válidas dividida entre la cantidad de actividades calificadas.
+El promedio se calculará mediante la suma de las calificaciones válidas dividida entre la cantidad de actividades con resultado definitivo.
 
 Las actividades pendientes de calificación no se incluirán como cero.
 
@@ -397,6 +437,8 @@ La reactivación de una actividad eliminará su calificación anterior y la excl
 El peso académico utilizado para el cálculo del IPA no modificará el cálculo del promedio.
 
 El promedio será una media aritmética simple.
+
+Si todavía no existen actividades con resultado definitivo, el promedio se mostrará como no disponible.
 
 # 7. ESTRUCTURA DE DISPONIBILIDAD
 
@@ -443,11 +485,11 @@ Reglas:
 
 1. Los intervalos deberán ser válidos.
 2. La hora de finalización deberá ser posterior a la inicial.
-3. No deberán existir intervalos superpuestos.
+3. No deberán existir intervalos superpuestos ni duplicados.
 4. La disponibilidad representará el tiempo libre del estudiante.
 5. No será necesario registrar separadamente los horarios de trabajo o clases.
 6. Los cambios se aplicarán al guardar la configuración.
-7. `maxDailyStudyHours` representará el límite general de horas de estudio por día.
+7. `maxDailyStudyHours` representará el límite general de horas de estudio por día y deberá ser un valor positivo.
 8. Una actividad podrá tener un límite particular mediante `dailyStudyHoursLimitOverride`.
 9. Si una actividad no tiene límite particular, se aplicará el límite general.
 10. La disponibilidad y los límites diarios se utilizarán para calcular el tiempo disponible antes de la entrega.
@@ -455,6 +497,8 @@ Reglas:
 12. El planificador deberá considerar únicamente los intervalos futuros disponibles antes de la fecha y hora de entrega.
 13. El límite global diario se aplicará a la suma de sesiones de todas las actividades programadas para ese día.
 14. El límite particular de una actividad no podrá superar el límite global diario.
+15. Si no existen intervalos de disponibilidad configurados, no se generarán sesiones automáticas.
+16. La ausencia de disponibilidad no impedirá utilizar las demás funcionalidades de la aplicación.
 
 # 8. ESTRUCTURA DE SESIONES
 
@@ -498,6 +542,8 @@ Formato:
 
 Duración de la sesión en minutos.
 
+Debe coincidir con la diferencia entre la hora de inicio y la hora de finalización.
+
 **status:**
 
 Estado de la sesión.
@@ -525,6 +571,11 @@ Reglas:
 14. Al reactivar una actividad podrá generarse una nueva planificación utilizando el esfuerzo restante.
 15. Si no existe disponibilidad suficiente, se mostrará una advertencia sin modificar el esfuerzo estimado.
 16. Si no existe disponibilidad configurada, la aplicación seguirá funcionando, pero no generará sesiones automáticas.
+17. La hora de finalización deberá ser posterior a la hora de inicio.
+18. La duración deberá ser positiva y coherente con el horario registrado.
+19. Las sesiones de una misma actividad no deberán superponerse.
+20. Las sesiones de diferentes actividades tampoco deberán superponerse.
+21. La suma de las duraciones de las sesiones de todas las actividades de un día deberá respetar el límite global diario.
 
 # 9. ESTRUCTURA DE NOTIFICACIONES
 
@@ -603,6 +654,7 @@ Reglas:
 13. Si la aplicación estuvo cerrada cuando correspondía generar una notificación, no deberá mostrarla posteriormente como una alerta atrasada.
 14. Si el evento ya pasó, no se generará la notificación correspondiente.
 15. No se generarán notificaciones de urgencia independientes de las dos categorías aprobadas.
+16. `eventKey` deberá identificar de manera única el evento para evitar duplicados.
 
 # 10. CÁLCULOS DERIVADOS
 
@@ -627,11 +679,13 @@ Se calcularán utilizando los datos existentes.
 - Puntos obtenidos.
 - Puntos perdidos.
 - Puntos restantes.
+- Puntos por distribuir.
 - Puntos extra obtenidos.
 - Promedio actual.
 - Porcentaje de progreso.
 - Resultado académico.
 - Condición de materia finalizada.
+- Condición de resultado provisional o definitivo.
 
 ## SESIONES
 
@@ -727,6 +781,14 @@ Las siguientes condiciones serán obligatorias:
 21. El límite global diario deberá respetarse al planificar todas las actividades.
 22. Las actividades entregadas sin nota deberán permanecer identificadas como pendientes de calificación, sin contabilizarse como cero.
 23. Una materia podrá finalizar con actividades entregadas que todavía estén pendientes de calificación, siempre que no tenga actividades en estado `PENDING`.
+24. Las actividades `PENDING` deberán tener `gradeValue = null`.
+25. Las actividades `DELIVERED` podrán tener una calificación válida o `gradeValue = null`.
+26. Las actividades `NOT_DELIVERED` deberán tener `gradeValue = 0`.
+27. Las actividades extra solo podrán pertenecer a materias con modalidad `POINTS`.
+28. Los puntos extra no deberán modificar los puntos restantes, perdidos ni el total base.
+29. Las sesiones completadas deberán reducir el esfuerzo restante sin modificar automáticamente la estimación total original.
+30. Las sesiones deberán respetar los horarios disponibles y los límites diarios.
+31. El resultado académico provisional o definitivo deberá calcularse de acuerdo con las reglas de la modalidad correspondiente.
 
 # 14. RESPONSABILIDAD DE IMPLEMENTACIÓN
 
