@@ -1,9 +1,9 @@
 # TIEMPOU
 # MODELO DE DATOS
 
-Versión: 1.0
-Estado: Propuesta técnica inicial
-Documento relacionado: ARQUITECTURA_TECNICA.txt
+Versión: 1.1  
+Estado: Propuesta técnica revisada  
+Documento relacionado: ARQUITECTURA_TECNICA.txt  
 Documento relacionado: INVENTARIO_ARCHIVOS.txt
 
 ---
@@ -25,9 +25,11 @@ Su cumplimiento es obligatorio para evitar incompatibilidades entre archivos.
 5. Las materias y actividades se administrarán desde un estado central.
 6. Los cálculos se realizarán utilizando la información centralizada.
 7. Los resultados calculados no se duplicarán innecesariamente en diferentes estructuras.
-8. Las fechas utilizarán el formato YYYY-MM-DD.
-9. Las horas utilizarán el formato HH:mm.
+8. Las fechas y horas de entrega utilizarán el formato YYYY-MM-DDTHH:mm.
+9. Las horas utilizarán el formato HH:mm cuando se almacenen por separado.
 10. Los valores numéricos deberán validarse antes de guardarse.
+11. Las fechas y horas se interpretarán según la hora local del dispositivo.
+12. Los cambios realizados durante la sesión se conservarán únicamente en memoria.
 
 # 3. ESTRUCTURA GENERAL DEL ESTADO
 
@@ -52,7 +54,7 @@ activities:
 Actividades asociadas a las materias.
 
 availability:
-Disponibilidad semanal.
+Disponibilidad semanal y límite diario general de estudio.
 
 sessions:
 Sesiones de estudio generadas.
@@ -102,7 +104,7 @@ Valores permitidos:
 - FINISHED
 
 createdAt:
-Fecha de creación.
+Fecha y hora de creación.
 
 Reglas:
 
@@ -111,6 +113,7 @@ Reglas:
 3. Una materia finalizada conservará sus datos.
 4. Una materia reactivada recuperará su estado anterior.
 5. Una materia solo podrá finalizarse cuando todas sus actividades tengan un estado de entrega registrado.
+6. Una materia no podrá finalizarse mientras tenga actividades en estado PENDING.
 
 Los campos específicos de cada modalidad deberán validarse según corresponda. No se utilizarán simultáneamente como si fueran una misma escala.
 
@@ -132,8 +135,14 @@ Nombre de la actividad.
 description:
 Descripción opcional.
 
-dueDate:
-Fecha de entrega obligatoria.
+dueDateTime:
+Fecha y hora exactas de entrega obligatorias.
+
+Formato:
+YYYY-MM-DDTHH:mm
+
+Ejemplo:
+2026-11-20T23:59
 
 academicWeight:
 Peso académico o valor asignado a la actividad.
@@ -152,19 +161,24 @@ Valores permitidos:
 gradeValue:
 Calificación obtenida. Puede ser null cuando todavía no exista una nota.
 
+dailyStudyHoursLimitOverride:
+Límite diario particular de estudio para esta actividad. Puede ser null cuando se utilice el límite general.
+
 createdAt:
-Fecha de creación.
+Fecha y hora de creación.
 
 Reglas:
 
 1. Toda actividad debe pertenecer a una materia existente.
-2. La fecha de entrega será obligatoria.
+2. La fecha y hora de entrega serán obligatorias.
 3. El peso académico deberá respetar el máximo establecido para la materia.
 4. El esfuerzo estimado deberá ser un valor positivo.
 5. Una actividad entregada sin nota tendrá estado de pendiente de calificación.
 6. Una actividad no entregada registrará calificación cero.
 7. Borrar una nota no modificará automáticamente el estado de entrega.
 8. Una actividad eliminada no deberá dejar sesiones ni registros asociados.
+9. Si no existe un límite diario particular, se utilizará el límite general configurado.
+10. La fecha y hora de entrega se utilizarán para calcular la urgencia, el tiempo disponible y las notificaciones.
 
 El estado PENDING representa una actividad todavía no entregada.
 
@@ -174,9 +188,29 @@ El estado NOT_DELIVERED representa una actividad no entregada.
 
 El estado pendiente de calificación será una condición derivada de DELIVERED y gradeValue = null. No será necesario duplicarlo como otro estado independiente.
 
+## 5.1. REACTIVACIÓN DE ACTIVIDADES
+
+Cuando una actividad se reactive desde el historial:
+
+1. Su deliveryStatus cambiará a PENDING.
+2. Su gradeValue se establecerá en null.
+3. Si anteriormente tenía una calificación, esta se eliminará.
+4. Si anteriormente estaba como NOT_DELIVERED, se eliminará el cero registrado.
+5. La actividad dejará de participar inmediatamente en los cálculos de resultados de la materia.
+6. Volverá a aparecer en la lista de actividades pendientes.
+7. Podrá volver a planificarse utilizando su fecha de entrega, esfuerzo estimado y disponibilidad vigente.
+8. Cuando se marque nuevamente como DELIVERED, pasará al historial como pendiente de calificación hasta que se registre una nueva nota.
+9. Cuando se registre la nueva nota, los resultados de la materia se recalcularán utilizando el nuevo valor.
+
+La reactivación no conservará la calificación anterior como resultado válido.
+
+Las sesiones completadas anteriormente se conservarán. Las sesiones pendientes anteriores podrán reorganizarse según la nueva planificación.
+
+No deberán generarse sesiones duplicadas.
+
 # 6. MODALIDADES DE CALIFICACIÓN
 
-## 6.1 POINTS
+## 6.1. POINTS
 
 En esta modalidad se utilizarán:
 
@@ -193,9 +227,13 @@ El sistema calculará:
 - Porcentaje de progreso.
 - Resultado académico.
 
+Las actividades ordinarias deberán distribuir el total de puntos establecido para la materia.
+
 Las actividades adicionales podrán manejarse como puntos extra según las reglas funcionales aprobadas.
 
-## 6.2 AVERAGE
+Los puntos extra deberán distinguirse de los puntos ordinarios y no modificar el total base de la materia.
+
+## 6.2. AVERAGE
 
 En esta modalidad se utilizarán:
 
@@ -205,11 +243,15 @@ En esta modalidad se utilizarán:
 
 Las notas de las actividades utilizarán la misma escala de la materia.
 
-El promedio se calculará mediante la suma de las calificaciones válidas dividida entre la cantidad de actividades calificadas, respetando las reglas aprobadas.
+El promedio se calculará mediante la suma de las calificaciones válidas dividida entre la cantidad de actividades calificadas.
 
 Las actividades pendientes de calificación no se incluirán como cero.
 
 Las actividades no entregadas sí se considerarán con calificación cero.
+
+La reactivación de una actividad eliminará su calificación anterior y la excluirá del promedio hasta que se registre una nueva calificación válida.
+
+El peso académico utilizado para el cálculo del IPA no modificará el cálculo del promedio de esta modalidad.
 
 # 7. ESTRUCTURA DE DISPONIBILIDAD
 
@@ -226,8 +268,11 @@ availability = {
   thursday: [],
   friday: [],
   saturday: [],
-  sunday: []
+  sunday: [],
+  maxDailyStudyHours: 4
 }
+
+El valor 4 es ilustrativo y podrá configurarse desde la aplicación.
 
 Cada intervalo tendrá:
 
@@ -248,6 +293,10 @@ Reglas:
 4. La disponibilidad representará el tiempo libre del estudiante.
 5. No será necesario registrar separadamente los horarios de trabajo o clases.
 6. Los cambios se aplicarán al guardar la configuración.
+7. maxDailyStudyHours representará el límite general de horas de estudio por día.
+8. Una actividad podrá tener un límite particular mediante dailyStudyHoursLimitOverride.
+9. Si una actividad no tiene límite particular, se aplicará el límite general.
+10. La disponibilidad y los límites diarios se utilizarán para calcular el tiempo disponible antes de la entrega.
 
 # 8. ESTRUCTURA DE SESIONES
 
@@ -289,6 +338,11 @@ Reglas:
 5. La planificación podrá recalcularse cuando cambien las condiciones.
 6. Las sesiones completadas podrán identificarse desde el detalle de la actividad.
 7. Al eliminar una actividad se eliminarán sus sesiones.
+8. Las sesiones completadas se conservarán cuando una actividad sea reactivada.
+9. Las sesiones pendientes podrán eliminarse o reorganizarse durante una nueva planificación.
+10. La nueva planificación no deberá duplicar sesiones completadas.
+11. Las sesiones futuras dejarán de programarse cuando una actividad sea DELIVERED o NOT_DELIVERED.
+12. Al reactivar una actividad, podrá generarse una nueva planificación con el tiempo disponible restante.
 
 # 9. ESTRUCTURA DE NOTIFICACIONES
 
@@ -332,6 +386,10 @@ Reglas:
 3. Se evitarán avisos repetidos.
 4. Se respetará la ventana de notificación aprobada.
 5. Las notificaciones relacionadas con registros eliminados deberán actualizarse o desaparecer.
+6. Las actividades DELIVERED o NOT_DELIVERED no deberán generar nuevas notificaciones de entrega.
+7. Las sesiones COMPLETED no deberán generar nuevas notificaciones de sesión.
+8. Al reactivar una actividad, las notificaciones deberán actualizarse de acuerdo con su nuevo estado, fecha de entrega y planificación.
+9. Las notificaciones no deberán conservar referencias a sesiones eliminadas.
 
 # 10. CÁLCULOS DERIVADOS
 
@@ -343,8 +401,10 @@ ACTIVIDADES:
 
 - IPA.
 - Posición en la lista de prioridades.
+- Tiempo restante hasta la entrega.
 - Días restantes.
 - Estado de vencimiento.
+- Tiempo disponible para planificación.
 - Tiempo pendiente de planificación.
 
 MATERIAS:
@@ -364,6 +424,15 @@ SESIONES:
 - Tiempo realizado.
 
 Estos resultados deberán actualizarse cuando cambien los datos que los originan.
+
+La reactivación de una actividad deberá provocar la actualización de:
+
+- Resultado académico de la materia.
+- Porcentaje de progreso.
+- IPA de la actividad.
+- Orden general de prioridades.
+- Planificación de sesiones.
+- Notificaciones relacionadas.
 
 # 11. IDENTIFICADORES
 
@@ -386,17 +455,24 @@ El archivo initialData.js contendrá el estado inicial de demostración.
 Deberá incluir información suficiente para probar:
 
 - Materias en ambas modalidades de calificación.
-- Actividades con distintas fechas de entrega.
+- Actividades con distintas fechas y horas de entrega.
 - Diferentes niveles de esfuerzo.
 - Actividades entregadas.
 - Actividades no entregadas.
 - Actividades pendientes de calificación.
 - Sesiones programadas.
 - Disponibilidad semanal.
+- Límites diarios de estudio.
 - Notificaciones internas.
 - Materias finalizadas.
 
 Los identificadores y relaciones deberán ser coherentes.
+
+Los datos iniciales se cargarán al iniciar la aplicación.
+
+Los cambios realizados durante la sesión se mantendrán únicamente en memoria y no modificarán permanentemente los datos iniciales.
+
+Al cerrar o recargar la aplicación se recuperará el conjunto inicial de demostración.
 
 # 13. REGLAS DE INTEGRIDAD
 
@@ -412,6 +488,13 @@ Las siguientes condiciones serán obligatorias:
 8. Las materias finalizadas deberán conservar su información.
 9. Los cálculos deberán utilizar exclusivamente los datos válidos.
 10. Los datos iniciales no deberán modificarse al editar la información durante una sesión.
+11. Una actividad reactivada no podrá conservar una calificación anterior como resultado válido.
+12. Una actividad reactivada deberá quedar en estado PENDING y sin calificación.
+13. Las sesiones completadas deberán conservarse al reactivar una actividad.
+14. No deberán existir sesiones duplicadas para una misma actividad y horario.
+15. Las notificaciones deberán mantener referencias válidas.
+16. Las fechas y horas de entrega deberán ser válidas y obligatorias.
+17. Los cambios de estado deberán actualizar los cálculos y las pantallas relacionadas.
 
 # 14. RESPONSABILIDAD DE IMPLEMENTACIÓN
 
