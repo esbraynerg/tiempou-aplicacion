@@ -1,5 +1,10 @@
 # ESPECIFICACIÓN DE CALIFICACIONES – TIEMPOU
 
+Versión: 1.1  
+Estado: Propuesta técnica revisada
+
+---
+
 ## 1. Objetivo
 
 Este documento define cómo TiempoU administra las calificaciones de las materias y sus actividades.
@@ -22,6 +27,7 @@ La modalidad se selecciona al crear una materia y queda bloqueada posteriormente
 - Una actividad marcada como No entregada recibe una calificación de cero.
 - Las calificaciones y los resultados se calculan de manera independiente del motor IPA.
 - Los resultados académicos deben distinguir entre valores definitivos y provisionales.
+- La finalización de una materia es independiente de la determinación de su resultado académico.
 
 ## 3. Modalidad 1: acumulación de puntos
 
@@ -43,6 +49,8 @@ Ejemplo:
 ### 3.2. Configuración de las actividades
 
 Cada actividad ordinaria debe tener un valor máximo en puntos.
+
+En esta modalidad, el campo `academicWeight` representa el valor máximo de puntos de la actividad.
 
 La suma de los valores máximos de las actividades ordinarias debe coincidir con el total de puntos de la materia cuando la distribución esté completa.
 
@@ -82,11 +90,14 @@ Se deben mostrar:
 
 Reglas de cálculo:
 
-**Puntos ganados:** suma de las calificaciones obtenidas en las actividades ordinarias calificadas.
+**Puntos ganados:** suma de las calificaciones obtenidas en las actividades ordinarias que tienen un resultado definitivo.
 
-**Puntos perdidos:** suma de la diferencia entre el valor máximo de cada actividad ordinaria y los puntos obtenidos, incluyendo las actividades marcadas como No entregada.
+**Puntos perdidos:** suma de la diferencia entre el valor máximo de cada actividad ordinaria con resultado definitivo y los puntos obtenidos. Se incluyen las actividades marcadas como No entregada, cuyo resultado es cero.
 
-**Puntos restantes:** puntos correspondientes a actividades ordinarias que todavía no tienen un resultado definitivo, es decir, actividades pendientes o entregadas que aún no tienen calificación.
+**Puntos restantes:** suma de los valores máximos de las actividades ordinarias que todavía no tienen un resultado definitivo. Esto incluye:
+
+- Actividades pendientes.
+- Actividades entregadas que todavía no tienen calificación.
 
 También se incluyen los puntos que todavía no han sido distribuidos entre actividades, cuando la configuración esté incompleta.
 
@@ -96,6 +107,8 @@ La suma de puntos ganados, perdidos y restantes debe corresponder al total de pu
 
 Los puntos por distribuir forman parte de los puntos restantes y deben mostrarse de manera identificable para que el estudiante pueda distinguirlos de los puntos asociados a actividades.
 
+Una actividad pendiente o entregada sin calificación no debe contabilizarse como puntos perdidos.
+
 ### 3.4. Actividades adicionales o de puntos extra
 
 Se permiten actividades adicionales de puntos extra.
@@ -104,15 +117,24 @@ Estas actividades:
 
 - No modifican el total base de puntos de la materia.
 - No forman parte de la distribución ordinaria de puntos.
+- Se identifican como actividades de puntos extra.
 - Sus puntos obtenidos se muestran por separado.
 - No deben provocar que la suma de los valores ordinarios supere el total configurado.
 - Sus calificaciones respetan el valor máximo definido para cada actividad adicional.
 
-Los puntos extra se consideran al mostrar el resultado académico acumulado, sin modificar el total base utilizado para calcular el porcentaje de progreso.
+Los puntos extra se suman al resultado académico acumulado, sin modificar el total base utilizado para calcular el porcentaje de progreso.
 
-El resultado académico acumulado debe distinguir los puntos ordinarios obtenidos de los puntos extra obtenidos.
+El resultado académico acumulado debe distinguir:
+
+- Puntos ordinarios obtenidos.
+- Puntos extra obtenidos.
+- Total acumulado incluyendo puntos extra.
 
 Los puntos extra no modifican los puntos perdidos, los puntos restantes ni el total base de la materia.
+
+Para determinar si el estudiante alcanza el mínimo de aprobación, se considera el resultado acumulado incluyendo los puntos extra.
+
+En el modelo de datos, las actividades deben contar con una propiedad que permita distinguir las actividades ordinarias de las actividades de puntos extra, por ejemplo `isExtraCredit`.
 
 ## 4. Modalidad 2: promedio de calificaciones
 
@@ -142,11 +164,13 @@ Ejemplo:
 - Actividad 2: nota máxima 5.0.
 - Actividad 3: nota máxima 5.0.
 
+En esta modalidad, el peso académico utilizado por el motor IPA es independiente de la calificación y no modifica la fórmula del promedio.
+
 ### 4.3. Cálculo del promedio
 
-El promedio se calcula mediante la media aritmética de las actividades que tienen calificación registrada.
+El promedio se calcula mediante la media aritmética de las actividades que tienen un resultado definitivo.
 
-Promedio = suma de las calificaciones registradas / cantidad de actividades calificadas.
+Promedio = suma de las calificaciones registradas / cantidad de actividades con resultado definitivo.
 
 Ejemplo:
 
@@ -160,17 +184,21 @@ Promedio = (4.0 + 3.5 + 4.5) / 3
 
 Resultado: 4.0.
 
-Las actividades entregadas que todavía no tienen nota no participan en el cálculo.
+Reglas:
 
-Las actividades marcadas como No entregada participan con una calificación de cero.
+- Las actividades entregadas que todavía no tienen nota no participan en el cálculo.
+- Las actividades marcadas como No entregada participan con una calificación de cero.
+- Las actividades pendientes no participan en el promedio.
+- Cada actividad con calificación registrada tiene el mismo peso en el cálculo del promedio.
+- El peso académico utilizado por el motor IPA no modifica la media aritmética.
 
-Las actividades pendientes no participan en el promedio.
+Si todavía no existen actividades con resultado definitivo, el promedio debe mostrarse como no disponible, sin asignar un valor de cero.
 
 ### 4.4. Peso académico y promedio
 
 El peso académico utilizado por el motor IPA es independiente del promedio de calificaciones.
 
-Aunque una actividad tenga un peso mayor para la priorización, el promedio de la materia continúa calculándose mediante la media aritmética de las actividades calificadas, según la regla aprobada.
+Aunque una actividad tenga un peso mayor para la priorización, el promedio de la materia continúa calculándose mediante la media aritmética de las actividades con resultado definitivo, según la regla aprobada.
 
 ## 5. Estados de entrega y calificación
 
@@ -182,6 +210,7 @@ Cada actividad puede tener uno de los siguientes estados:
 - No se considera calificada.
 - Si vence su fecha, no se convierte automáticamente en No entregada.
 - Continúa participando en la priorización mientras corresponda.
+- No participa en los cálculos de resultados académicos.
 
 ### Entregada
 
@@ -191,6 +220,7 @@ Cada actividad puede tener uno de los siguientes estados:
 - Si todavía no tiene nota, aparece como Pendiente de calificación.
 - No se le asigna cero automáticamente.
 - No participa en el promedio ni suma puntos ganados hasta que se registre su calificación.
+- Mientras no tenga nota, sus puntos máximos permanecen dentro de los puntos restantes en la modalidad de acumulación de puntos.
 
 ### No entregada
 
@@ -198,6 +228,10 @@ Cada actividad puede tener uno de los siguientes estados:
 - Recibe una calificación de cero.
 - Se incluye en los cálculos de resultados.
 - Pasa al historial.
+- En acumulación de puntos, el valor máximo de la actividad se contabiliza como puntos perdidos.
+- En promedio, participa con una calificación de cero.
+
+**Importante:** Pendiente de calificación no es un estado independiente de la actividad. Es una presentación derivada de una actividad con estado `DELIVERED` y sin calificación registrada.
 
 ## 6. Registro y modificación de calificaciones
 
@@ -257,16 +291,15 @@ La reactivación no debe duplicar las sesiones ya realizadas. Las sesiones compl
 
 La aplicación debe mostrar el resultado académico de acuerdo con la modalidad configurada.
 
-En acumulación de puntos:
+### Acumulación de puntos
 
-- Se compara el resultado acumulado con el mínimo de puntos para aprobar.
-- Los puntos extra se incluyen en el resultado académico acumulado.
+- Se compara el resultado acumulado, incluyendo los puntos extra, con el mínimo de puntos para aprobar.
 - El porcentaje de progreso continúa calculándose sobre el total base de puntos.
 - Mientras existan actividades sin resultado definitivo, el estado debe presentarse como provisional.
 - Si la distribución de puntos ordinarios está incompleta, el resultado también debe presentarse como provisional.
 - Cuando todas las actividades tengan resultado definitivo y la distribución ordinaria esté completa, se determina Aprobado o Desaprobado.
 
-En promedio:
+### Promedio de calificaciones
 
 - Se compara el promedio calculado con la nota mínima para aprobar.
 - Mientras existan actividades sin resultado definitivo, el estado debe presentarse como provisional.
@@ -277,6 +310,8 @@ No se debe presentar como definitivo un resultado cuando todavía existen activi
 Una actividad marcada como No entregada tiene un resultado definitivo de cero.
 
 Una actividad Entregada sin nota tiene un estado de entrega registrado, pero todavía no tiene un resultado académico definitivo.
+
+Si no existen actividades con resultado definitivo en la modalidad de promedio, el promedio debe mostrarse como no disponible y el resultado académico debe permanecer provisional.
 
 ## 8. Finalización y reactivación de materias
 
@@ -307,6 +342,8 @@ Al reactivarla:
 
 Si una actividad de una materia finalizada se reactiva individualmente, la materia debe regresar automáticamente a En curso.
 
+Una materia sin actividades no debe finalizarse automáticamente por el simple hecho de no tener actividades pendientes.
+
 ## 9. Eliminación de registros
 
 - Eliminar una actividad elimina sus datos y registros asociados.
@@ -315,6 +352,7 @@ Si una actividad de una materia finalizada se reactiva individualmente, la mater
 - No deben quedar sesiones o registros asociados a elementos eliminados.
 - Si se elimina una actividad ordinaria de una materia por puntos, se debe actualizar la distribución de puntos.
 - Si después de eliminarla la suma de los valores ordinarios queda por debajo del total, la distribución se considera incompleta y el resultado académico vuelve a ser provisional.
+- Si se elimina una actividad de puntos extra, se actualiza el total de puntos extra obtenidos, sin modificar la distribución ordinaria.
 
 ## 10. Casos de prueba
 
@@ -399,6 +437,34 @@ Al reactivar una actividad No entregada:
 
 Cuando una actividad reactivada se marca nuevamente como Entregada, debe aparecer en el historial como Pendiente de calificación hasta que se registre una nueva nota.
 
+### Prueba 14: puntos extra
+
+Crear una materia de 500 puntos con actividades ordinarias que sumen exactamente 500 y una actividad adicional de 20 puntos extra.
+
+El sistema debe:
+
+- Mantener el total base en 500.
+- No incluir los 20 puntos extra en la distribución ordinaria.
+- Mostrar los puntos extra por separado.
+- Sumarlos al resultado académico acumulado cuando se obtengan.
+- Mantener el porcentaje de progreso calculado sobre los 500 puntos base.
+
+### Prueba 15: actividad pendiente en acumulación de puntos
+
+Crear una materia de 500 puntos con una distribución ordinaria completa.
+
+Si una actividad de 100 puntos permanece Pendiente, sus 100 puntos deben formar parte de los puntos restantes y no de los puntos perdidos.
+
+### Prueba 16: actividad entregada sin calificación en acumulación de puntos
+
+Si una actividad ordinaria de 100 puntos está Entregada, pero no tiene nota, sus 100 puntos deben permanecer dentro de los puntos restantes hasta que se registre la calificación.
+
+### Prueba 17: promedio sin calificaciones
+
+Crear una materia en modalidad promedio sin actividades con resultado definitivo.
+
+El sistema debe mostrar el promedio como no disponible y mantener el resultado académico como provisional.
+
 ## 11. Restricciones de implementación
 
 - No utilizar bases de datos ni almacenamiento persistente.
@@ -410,6 +476,8 @@ Cuando una actividad reactivada se marca nuevamente como Entregada, debe aparece
 - La reactivación de actividades debe eliminar el resultado anterior y actualizar los cálculos correspondientes.
 - La distribución progresiva de puntos debe permitir valores inferiores al total, pero nunca superiores.
 - Los resultados deben distinguir entre valores provisionales y definitivos.
+- Las actividades ordinarias y las actividades de puntos extra deben distinguirse mediante una propiedad del modelo de datos.
+- El cálculo del promedio debe utilizar la media aritmética simple, sin ponderación por peso académico.
 
 ## 12. Estado de aprobación
 
