@@ -1,0 +1,352 @@
+# TIEMPOU
+# ESPECIFICACIÓN DEL MOTOR IPA
+## Índice de Priorización de Actividades
+
+Versión: 1.0
+Estado: Especificación técnica inicial
+Documento relacionado: ARQUITECTURA_TECNICA.txt
+Documento relacionado: MODELO_DATOS.txt
+
+---
+
+# 1. OBJETIVO
+
+Definir el funcionamiento del motor de priorización de actividades de TiempoU.
+
+El motor IPA será responsable de calcular la prioridad académica de las actividades y determinar el orden en el que deben presentarse al estudiante.
+
+Su finalidad es ayudar a organizar las actividades considerando tres factores:
+
+- Urgencia de entrega.
+- Peso académico.
+- Presión del esfuerzo.
+
+El motor deberá funcionar independientemente de la interfaz visual.
+
+# 2. FÓRMULA OFICIAL
+
+Se utilizará la fórmula aprobada:
+
+IPA = 0.35U + 0.20P + 0.45R
+
+Donde:
+
+U = Urgencia.
+P = Peso académico.
+R = Presión del esfuerzo.
+
+Distribución:
+
+Urgencia: 35 %.
+Peso académico: 20 %.
+Presión del esfuerzo: 45 %.
+
+El resultado será un índice numérico de priorización.
+
+Las variables deberán utilizar una escala normalizada de 0 a 100.
+
+El resultado final también estará comprendido entre 0 y 100.
+
+# 3. VARIABLE U: URGENCIA
+
+Representa la proximidad de la fecha de entrega.
+
+La urgencia deberá calcularse considerando:
+
+- Fecha actual.
+- Fecha de entrega.
+- Días restantes.
+
+La fecha de entrega será obligatoria.
+
+La urgencia aumentará conforme se aproxime el vencimiento.
+
+La variable U deberá utilizar una clasificación por intervalos temporales.
+
+El cálculo deberá contemplar:
+
+- Actividades que vencen hoy.
+- Actividades que vencen mañana.
+- Actividades próximas a vencer.
+- Actividades con varios días disponibles.
+
+La ausencia de fecha de entrega no será aceptada para una actividad nueva.
+
+Las actividades vencidas deberán conservar un tratamiento coherente y no provocar errores de cálculo.
+
+La tabla exacta de conversión de días a valores U deberá respetar los ejemplos y parámetros aprobados durante la definición funcional. No se crearán intervalos arbitrarios.
+
+# 4. VARIABLE P: PESO ACADÉMICO
+
+Representa la importancia académica de una actividad dentro de su materia.
+
+El cálculo tendrá en cuenta:
+
+- Valor académico de la actividad.
+- Valor máximo de la materia.
+- Modalidad de calificación.
+
+El sistema deberá normalizar el peso académico a una escala de 0 a 100.
+
+En modalidad de acumulación de puntos:
+
+- Las actividades representan puntos dentro del total de la materia.
+- La suma de los valores de las actividades ordinarias deberá corresponder al máximo establecido.
+- Los puntos adicionales deberán respetar las reglas de actividades extra.
+
+En modalidad de promedio:
+
+- Las actividades utilizarán la escala de calificación establecida para la materia.
+- El peso académico deberá mantener coherencia con la importancia asignada a cada actividad.
+
+No se permitirá comparar directamente valores de escalas diferentes sin normalizarlos.
+
+La normalización deberá evitar divisiones por cero y valores fuera del intervalo permitido.
+
+# 5. VARIABLE R: PRESIÓN DEL ESFUERZO
+
+Representa la presión que genera el tiempo necesario para completar una actividad en relación con el tiempo disponible.
+
+El cálculo considerará:
+
+- Esfuerzo estimado de la actividad.
+- Tiempo disponible del estudiante.
+- Disponibilidad semanal configurada.
+- Días restantes para la entrega.
+
+La variable R deberá normalizarse entre 0 y 100.
+
+A mayor presión de esfuerzo, mayor será el valor de R.
+
+El cálculo deberá considerar que una actividad que requiere muchas horas y dispone de poco tiempo genera mayor presión que una actividad sencilla con suficiente tiempo disponible.
+
+La planificación deberá utilizar las horas libres configuradas por el estudiante.
+
+No se deberán inventar horarios laborales ni académicos.
+
+## 5.1 Ausencia de disponibilidad
+
+Si el estudiante no ha configurado intervalos de disponibilidad:
+
+- D = 0.
+- R = 100.
+
+Esta condición no deberá impedir que el motor IPA funcione.
+
+La aplicación podrá seguir calculando prioridades, aunque no pueda distribuir sesiones de estudio.
+
+# 6. PROTECCIÓN DE URGENCIA
+
+La protección de urgencia es una regla fundamental de TiempoU.
+
+El sistema no deberá permitir que una actividad con una fecha de entrega más próxima pierda injustificadamente su prioridad frente a otra actividad con mayor peso académico o esfuerzo.
+
+Se utilizará una lógica de agrupación por urgencia para el ordenamiento interno.
+
+La presentación final será una única lista general de actividades.
+
+## 6.1 Reglas aprobadas
+
+CASO 1:
+
+Actividad A:
+Fecha de entrega: hoy.
+
+Actividad B:
+Fecha de entrega: mañana.
+
+Resultado:
+La actividad A debe aparecer primero, independientemente de que la actividad B tenga mayor IPA.
+
+CASO 2:
+
+Actividad A:
+Vence en 1 día.
+
+Actividad B:
+Vence en 3 días.
+
+Resultado:
+La actividad A conserva prioridad.
+
+CASO 3:
+
+Actividad A:
+Vence en 7 días.
+
+Actividad B:
+Vence en 10 días.
+
+Resultado:
+Existe una diferencia de 3 días. En este caso, los factores de peso académico y esfuerzo pueden adquirir relevancia para determinar el orden mediante el IPA.
+
+## 6.2 Interpretación técnica
+
+La diferencia entre fechas de entrega determinará cuándo la protección de urgencia debe prevalecer y cuándo los demás factores podrán influir en el orden.
+
+Reglas:
+
+1. Una diferencia inferior a 3 días protege la prioridad de la fecha más próxima.
+2. Una diferencia de al menos 3 días permite que el IPA influya en el orden.
+3. No se debe eliminar el cálculo IPA por aplicar la protección de urgencia.
+4. La protección deberá respetar los casos de prueba aprobados.
+5. El ordenamiento no deberá depender exclusivamente del valor numérico IPA.
+
+# 7. ORDENAMIENTO GENERAL
+
+El motor devolverá una lista general de actividades ordenadas.
+
+El proceso será:
+
+1. Obtener las actividades que deben participar en la priorización.
+2. Calcular los días restantes.
+3. Calcular U.
+4. Calcular P.
+5. Calcular R.
+6. Calcular el IPA.
+7. Aplicar la protección de urgencia.
+8. Ordenar las actividades.
+9. Devolver la lista general.
+
+La agrupación por urgencia será una herramienta interna del algoritmo.
+
+No se mostrarán grupos independientes en la interfaz.
+
+El estudiante visualizará una sola lista de prioridades.
+
+# 8. ACTIVIDADES QUE PARTICIPAN
+
+Participarán en la priorización las actividades que estén pendientes de entrega.
+
+Las actividades entregadas y no entregadas no deberán continuar apareciendo como pendientes de ejecución.
+
+Las actividades entregadas pendientes de calificación pertenecerán al historial.
+
+Las actividades eliminadas no deberán participar en el cálculo.
+
+# 9. EMPATES
+
+Cuando dos actividades tengan:
+
+- La misma fecha de entrega.
+- El mismo peso académico.
+- El mismo esfuerzo estimado.
+- El mismo resultado IPA.
+
+El sistema no deberá generar errores.
+
+Se conservará el orden de registro.
+
+El identificador de creación podrá utilizarse como criterio auxiliar para garantizar estabilidad.
+
+# 10. ACTUALIZACIÓN DEL IPA
+
+El motor deberá recalcular las prioridades cuando cambien los datos relevantes.
+
+Situaciones:
+
+- Creación de una actividad.
+- Modificación de una actividad.
+- Cambio de fecha de entrega.
+- Cambio de esfuerzo estimado.
+- Cambio de peso académico.
+- Modificación de disponibilidad semanal.
+- Eliminación de una actividad.
+- Cambio de estado de entrega.
+
+El sistema también deberá considerar el paso del tiempo para actualizar los días restantes y las prioridades.
+
+No se deberá mantener un resultado IPA desactualizado cuando cambien sus variables.
+
+# 11. VALIDACIONES
+
+El motor deberá contemplar:
+
+- Fechas válidas.
+- Esfuerzos positivos.
+- Valores académicos válidos.
+- Materias existentes.
+- Actividades relacionadas correctamente.
+- Disponibilidad válida.
+- Normalización correcta.
+- Ausencia de divisiones por cero.
+- Valores numéricos finitos.
+
+Ningún dato inválido deberá provocar que toda la aplicación deje de funcionar.
+
+# 12. PRUEBAS OBLIGATORIAS
+
+Antes de considerar terminado el motor IPA deberán comprobarse los siguientes escenarios:
+
+PRUEBA 1:
+Actividad que vence hoy frente a actividad que vence mañana.
+
+PRUEBA 2:
+Actividad que vence en 1 día frente a actividad que vence en 3 días.
+
+PRUEBA 3:
+Actividad que vence en 7 días frente a actividad que vence en 10 días.
+
+PRUEBA 4:
+Actividades con igual fecha de entrega.
+
+PRUEBA 5:
+Actividades con igual peso y esfuerzo.
+
+PRUEBA 6:
+Actividad con esfuerzo elevado y disponibilidad limitada.
+
+PRUEBA 7:
+Actividad sin disponibilidad semanal configurada.
+
+PRUEBA 8:
+Modificación de la fecha de entrega.
+
+PRUEBA 9:
+Eliminación de una actividad.
+
+PRUEBA 10:
+Actividad entregada que debe salir de la lista de pendientes.
+
+PRUEBA 11:
+Varias actividades con diferentes fechas, pesos y esfuerzos.
+
+PRUEBA 12:
+Valores límite y datos inválidos.
+
+# 13. IMPLEMENTACIÓN
+
+El archivo responsable será:
+
+src/lib/ipa.js
+
+Este archivo contendrá las funciones necesarias para:
+
+- Calcular urgencia.
+- Calcular peso académico normalizado.
+- Calcular presión del esfuerzo.
+- Calcular IPA.
+- Aplicar protección de urgencia.
+- Ordenar actividades.
+
+El archivo deberá ser independiente de React y no deberá manipular directamente la interfaz.
+
+Los servicios podrán solicitar los resultados del motor y distribuirlos a las páginas correspondientes.
+
+# 14. REGLA DE CONTROL
+
+La fórmula y las reglas funcionales aquí establecidas no podrán modificarse unilateralmente durante la implementación.
+
+Si se identifica una contradicción, un caso no definido o una necesidad de ajuste, deberá consultarse antes de cambiar el comportamiento.
+
+Los ejemplos aprobados serán utilizados como pruebas de referencia.
+
+# 15. PRINCIPIO FUNDAMENTAL
+
+El motor IPA debe equilibrar la urgencia, la importancia académica y la presión del esfuerzo.
+
+La protección de urgencia evita que una actividad próxima a vencer sea desplazada injustificadamente por otra actividad con un vencimiento más lejano.
+
+El resultado debe ser una priorización útil, consistente y comprensible para el estudiante.
+
+FIN DEL DOCUMENTO.
