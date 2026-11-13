@@ -61,16 +61,18 @@ Después de guardar:
 
 TiempoU debe permitir establecer un límite general de horas de estudio por día.
 
-Este límite representa el máximo de tiempo que el estudiante desea dedicar al estudio en una jornada.
+Este límite representa el máximo de tiempo total que el estudiante desea dedicar al estudio durante una jornada, considerando todas sus actividades.
 
 También se permite establecer un límite particular para una actividad.
 
 ### Reglas
 
-- El límite general se aplica a las actividades cuando no existe una configuración particular.
-- El límite particular de una actividad reemplaza el límite general para esa actividad.
+- El límite general funciona como un máximo global diario para la suma de las sesiones de todas las actividades.
+- El límite particular establece un máximo diario adicional para la actividad correspondiente.
+- El límite particular puede ser inferior al límite general, pero nunca permite superar el límite global.
+- Cuando una actividad no tiene un límite particular, queda sujeta al límite global diario.
+- La suma de todas las sesiones de un día no debe superar el límite global ni el tiempo total realmente disponible.
 - Ninguna sesión puede superar el tiempo disponible del intervalo correspondiente.
-- La suma de las sesiones planificadas para un día no debe superar el tiempo disponible ni el límite diario aplicable.
 - Los límites sirven para organizar las sesiones y no modifican directamente el esfuerzo total estimado de una actividad.
 
 ## 4. Generación automática de sesiones
@@ -79,20 +81,21 @@ TiempoU debe generar sesiones de estudio a partir de:
 
 - Las actividades pendientes.
 - El esfuerzo estimado de cada actividad.
-- La fecha de entrega.
+- La fecha y hora de entrega.
 - La disponibilidad registrada.
 - Los límites de estudio.
 - El orden de prioridad calculado por el motor IPA.
 
-El sistema debe distribuir el esfuerzo estimado en sesiones dentro de los intervalos disponibles antes de la fecha de entrega.
+El sistema debe distribuir el esfuerzo estimado en sesiones dentro de los intervalos disponibles antes de la fecha y hora de entrega.
 
 ### Reglas
 
 - Las sesiones se generan automáticamente cuando existe disponibilidad.
-- Se debe respetar la fecha de entrega de cada actividad.
-- No se deben programar sesiones después de la fecha de entrega.
+- Se debe respetar la fecha y hora de entrega de cada actividad.
+- No se deben programar sesiones después de la fecha y hora de entrega.
 - No se deben programar sesiones en días u horarios sin disponibilidad.
-- La distribución debe respetar los límites diarios.
+- La distribución debe respetar el límite global diario.
+- También debe respetar los límites particulares establecidos para cada actividad.
 - Se debe intentar atender primero las actividades de mayor prioridad.
 - Una actividad puede dividirse en varias sesiones.
 - La suma de las duraciones planificadas debe corresponder al esfuerzo estimado, salvo que la disponibilidad y los límites impidan completar la distribución.
@@ -113,10 +116,10 @@ Cuando se modifica la cantidad de sesiones:
 - Se recalcula la duración de las sesiones.
 - Se respetan los días restantes hasta la entrega.
 - Se respetan los intervalos de disponibilidad.
-- Se respetan los límites diarios.
+- Se respetan el límite global diario y el límite particular de la actividad, cuando exista.
 - Se actualiza la planificación de esa actividad.
 
-La edición no debe generar sesiones que excedan la disponibilidad registrada.
+La edición no debe generar sesiones que excedan la disponibilidad registrada ni los límites establecidos.
 
 Si la nueva distribución no es posible, se debe informar al estudiante y conservar una planificación válida.
 
@@ -128,17 +131,19 @@ Situaciones que requieren actualización:
 
 - Modificación de la disponibilidad.
 - Cambio del esfuerzo estimado.
-- Cambio de fecha de entrega.
-- Modificación del límite diario.
+- Cambio de fecha u hora de entrega.
+- Modificación del límite global diario.
 - Modificación del límite particular de una actividad.
 - Cambio de prioridad que afecte la distribución.
 - Modificación manual de la cantidad de sesiones.
 
-La reorganización debe considerar los días restantes hasta la fecha de entrega.
+La reorganización debe considerar los días y horarios restantes hasta la fecha y hora de entrega.
 
 Las sesiones que ya fueron marcadas como realizadas deben conservarse y no deben volver a generarse como pendientes.
 
-Las sesiones futuras pueden redistribuirse según la nueva disponibilidad.
+Las sesiones futuras pueden redistribuirse según la nueva disponibilidad y los límites vigentes.
+
+La reorganización no debe duplicar sesiones realizadas ni generar sesiones fuera de los intervalos disponibles.
 
 ## 7. Seguimiento de sesiones
 
@@ -168,25 +173,31 @@ El seguimiento debe ser sencillo y no requerir registrar información adicional 
 
 Cada sesión pertenece a una actividad.
 
-Cuando una actividad cambia de estado:
+Cuando una actividad cambia de estado, la planificación debe actualizarse de la siguiente manera:
 
 ### Actividad Entregada
 
 - Deja de participar en la planificación futura.
 - Sus sesiones pendientes dejan de programarse.
-- Se conserva el historial de sesiones realizadas.
+- Se conservan las sesiones que ya fueron registradas como realizadas.
+- Las sesiones realizadas permanecen disponibles en el detalle de la actividad como historial.
 
 ### Actividad No entregada
 
 - Deja de participar en la planificación futura.
 - Sus sesiones pendientes dejan de programarse.
-- Se conserva el historial de sesiones realizadas.
+- Se conservan las sesiones que ya fueron registradas como realizadas.
+- Las sesiones realizadas permanecen disponibles en el detalle de la actividad como historial.
 
 ### Actividad reactivada
 
-- Puede volver a participar en la planificación.
-- Se calcula una nueva distribución considerando el tiempo restante.
-- No se deben duplicar las sesiones ya registradas como realizadas.
+- Vuelve a participar en la planificación de actividades pendientes.
+- Se genera una nueva planificación considerando el tiempo disponible hasta su fecha y hora de entrega.
+- Se conservan las sesiones que ya fueron registradas como realizadas.
+- Las sesiones realizadas no deben duplicarse ni volver a aparecer como pendientes.
+- La nueva planificación debe considerar el esfuerzo que todavía falta por cubrir, descontando el tiempo correspondiente a las sesiones realizadas.
+- Si no queda tiempo disponible antes de la entrega, no se generan sesiones y se informa al estudiante.
+- La nueva planificación debe respetar la disponibilidad, el límite global diario y el límite particular de la actividad, cuando exista.
 
 ### Actividad eliminada
 
@@ -215,7 +226,7 @@ La sección de disponibilidad debe mostrar:
 
 - Los días de la semana.
 - Los intervalos libres registrados.
-- El límite general diario.
+- El límite global diario.
 - La opción para guardar los cambios.
 
 El detalle de cada actividad debe mostrar:
@@ -236,7 +247,10 @@ El detalle de cada actividad debe mostrar:
 - Las sesiones deben estar relacionadas con su actividad mediante identificadores.
 - No duplicar sesiones realizadas.
 - No generar sesiones fuera de los intervalos disponibles.
+- No superar el límite global diario ni los límites particulares de las actividades.
 - No modificar automáticamente las notas ni los estados de entrega de las actividades.
+- Al entregar o marcar como no entregada una actividad, deben dejar de programarse sus sesiones pendientes y conservarse las realizadas.
+- Al reactivar una actividad, debe generarse una nueva planificación sin duplicar las sesiones realizadas.
 
 ## 12. Casos de prueba
 
@@ -260,13 +274,13 @@ Crear una actividad de cuatro horas y configurar disponibilidad suficiente antes
 
 Crear una actividad cuyo esfuerzo estimado supere el tiempo disponible. El sistema debe mostrar una advertencia sin modificar el esfuerzo estimado.
 
-### Prueba 6: límite diario
+### Prueba 6: límite global diario
 
-Comprobar que las sesiones no superan el límite diario configurado.
+Configurar un límite global diario y comprobar que la suma de las sesiones de todas las actividades no lo supera.
 
 ### Prueba 7: límite particular
 
-Establecer un límite particular para una actividad y comprobar que se aplica en lugar del límite general.
+Establecer un límite particular inferior al global para una actividad y comprobar que se respeta sin permitir que la suma diaria supere el límite global.
 
 ### Prueba 8: edición de sesiones
 
@@ -287,6 +301,14 @@ Modificar los intervalos, guardar y comprobar que se actualiza la planificación
 ### Prueba 12: eliminación de actividad
 
 Eliminar una actividad y comprobar que desaparecen sus sesiones asociadas.
+
+### Prueba 13: actividad entregada o no entregada
+
+Cambiar una actividad a Entregada o No entregada y comprobar que sus sesiones pendientes dejan de programarse, mientras las realizadas se conservan.
+
+### Prueba 14: reactivación de actividad
+
+Reactivar una actividad y comprobar que se genera una nueva planificación con el tiempo restante hasta la entrega, conservando las sesiones realizadas y sin duplicarlas.
 
 ## 13. Estado de aprobación
 
