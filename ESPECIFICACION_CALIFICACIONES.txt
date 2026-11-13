@@ -16,11 +16,12 @@ La modalidad se selecciona al crear una materia y queda bloqueada posteriormente
 - Cada materia tiene una modalidad de calificación.
 - Cada materia tiene una nota máxima y una nota mínima para aprobar.
 - Los valores de las actividades deben respetar la escala de su materia.
-- No se permiten calificaciones superiores al máximo establecido.
+- No se permiten calificaciones negativas ni superiores al máximo establecido.
 - Las modificaciones de valores y calificaciones actualizan automáticamente los resultados.
 - Una actividad entregada sin nota no se considera calificada.
 - Una actividad marcada como No entregada recibe una calificación de cero.
 - Las calificaciones y los resultados se calculan de manera independiente del motor IPA.
+- Los resultados académicos deben distinguir entre valores definitivos y provisionales.
 
 ## 3. Modalidad 1: acumulación de puntos
 
@@ -41,9 +42,9 @@ Ejemplo:
 
 ### 3.2. Configuración de las actividades
 
-Cada actividad debe tener un valor máximo en puntos.
+Cada actividad ordinaria debe tener un valor máximo en puntos.
 
-La suma de los valores máximos de las actividades ordinarias debe coincidir con el total de puntos de la materia.
+La suma de los valores máximos de las actividades ordinarias debe coincidir con el total de puntos de la materia cuando la distribución esté completa.
 
 Ejemplo:
 
@@ -56,7 +57,17 @@ Ejemplo:
 | Examen final | 100 |
 | Total | 500 |
 
-No se debe permitir guardar una configuración en la que la suma de los valores ordinarios sea diferente del total de la materia.
+**Reglas para la distribución de puntos:**
+
+- Se permite crear actividades progresivamente.
+- Mientras se completa la distribución, la suma de los valores de las actividades ordinarias puede ser inferior al total de la materia.
+- No se permite que la suma de los valores ordinarios supere el total configurado.
+- La distribución se considera completa cuando la suma de los valores ordinarios coincide exactamente con el total de la materia.
+- Si se modifica o elimina una actividad y la suma queda por debajo del total, la distribución vuelve a considerarse incompleta.
+- Mientras la distribución esté incompleta, el resultado académico se presenta como provisional.
+- La aplicación debe mostrar los puntos que todavía faltan por distribuir.
+
+No se debe permitir guardar una actividad ordinaria si su incorporación hace que la suma de los valores supere el total de la materia.
 
 ### 3.3. Cálculo de resultados
 
@@ -65,20 +76,25 @@ Se deben mostrar:
 - Puntos ganados.
 - Puntos perdidos.
 - Puntos restantes.
+- Puntos por distribuir, cuando corresponda.
 - Porcentaje de progreso.
 - Estado académico: Aprobado o Desaprobado, cuando corresponda determinarlo.
 
 Reglas de cálculo:
 
-**Puntos ganados:** suma de las calificaciones obtenidas en las actividades calificadas.
+**Puntos ganados:** suma de las calificaciones obtenidas en las actividades ordinarias calificadas.
 
-**Puntos perdidos:** suma de la diferencia entre el valor máximo de cada actividad y los puntos obtenidos, incluyendo las actividades marcadas como No entregada.
+**Puntos perdidos:** suma de la diferencia entre el valor máximo de cada actividad ordinaria y los puntos obtenidos, incluyendo las actividades marcadas como No entregada.
 
-**Puntos restantes:** puntos correspondientes a actividades que todavía no tienen un resultado definitivo, es decir, actividades pendientes o entregadas que aún no tienen calificación.
+**Puntos restantes:** puntos correspondientes a actividades ordinarias que todavía no tienen un resultado definitivo, es decir, actividades pendientes o entregadas que aún no tienen calificación.
+
+También se incluyen los puntos que todavía no han sido distribuidos entre actividades, cuando la configuración esté incompleta.
 
 **Porcentaje de progreso:** puntos ganados divididos entre el total de puntos de la materia, multiplicado por 100.
 
 La suma de puntos ganados, perdidos y restantes debe corresponder al total de puntos de la materia.
+
+Los puntos por distribuir forman parte de los puntos restantes y deben mostrarse de manera identificable para que el estudiante pueda distinguirlos de los puntos asociados a actividades.
 
 ### 3.4. Actividades adicionales o de puntos extra
 
@@ -90,8 +106,13 @@ Estas actividades:
 - No forman parte de la distribución ordinaria de puntos.
 - Sus puntos obtenidos se muestran por separado.
 - No deben provocar que la suma de los valores ordinarios supere el total configurado.
+- Sus calificaciones respetan el valor máximo definido para cada actividad adicional.
 
 Los puntos extra se consideran al mostrar el resultado académico acumulado, sin modificar el total base utilizado para calcular el porcentaje de progreso.
+
+El resultado académico acumulado debe distinguir los puntos ordinarios obtenidos de los puntos extra obtenidos.
+
+Los puntos extra no modifican los puntos perdidos, los puntos restantes ni el total base de la materia.
 
 ## 4. Modalidad 2: promedio de calificaciones
 
@@ -204,4 +225,194 @@ Al borrar una nota:
 - Se actualizan los resultados de la materia.
 - La actividad conserva su estado de entrega.
 - Si estaba Entregada, permanece Entregada y aparece como Pendiente de calificación.
-- No se convierte nuevamente
+- No se convierte nuevamente en Pendiente.
+- La actividad permanece en el historial.
+- En acumulación de puntos, los puntos asociados dejan de contarse como ganados y vuelven a formar parte de los puntos restantes.
+- En promedio, la actividad deja de participar en el cálculo hasta que se registre una nueva calificación.
+
+Borrar una calificación no equivale a reactivar una actividad.
+
+### Reactivar una actividad
+
+Al reactivar una actividad desde el historial:
+
+- Se elimina la calificación registrada anteriormente.
+- Si estaba marcada como No entregada, se elimina también el cero asociado a ese estado.
+- Su estado de entrega cambia a Pendiente.
+- Se excluye inmediatamente de los cálculos de resultados académicos.
+- Regresa a la lista de actividades pendientes.
+- Vuelve a estar disponible para la planificación de sesiones.
+- Se actualizan automáticamente los resultados de la materia.
+- Se actualiza la prioridad mediante el motor IPA cuando corresponda.
+
+Si la actividad pertenecía a una materia finalizada, la materia regresa automáticamente a En curso, porque vuelve a tener una actividad pendiente.
+
+Cuando la actividad se marque nuevamente como Entregada, pasará al historial como Pendiente de calificación hasta que se registre una nueva nota.
+
+Si se marca nuevamente como No entregada, recibirá cero y volverá a participar en los cálculos.
+
+La reactivación no debe duplicar las sesiones ya realizadas. Las sesiones completadas se conservan y las sesiones futuras pueden volver a organizarse según las reglas de disponibilidad y planificación.
+
+## 7. Estado académico de la materia
+
+La aplicación debe mostrar el resultado académico de acuerdo con la modalidad configurada.
+
+En acumulación de puntos:
+
+- Se compara el resultado acumulado con el mínimo de puntos para aprobar.
+- Los puntos extra se incluyen en el resultado académico acumulado.
+- El porcentaje de progreso continúa calculándose sobre el total base de puntos.
+- Mientras existan actividades sin resultado definitivo, el estado debe presentarse como provisional.
+- Si la distribución de puntos ordinarios está incompleta, el resultado también debe presentarse como provisional.
+- Cuando todas las actividades tengan resultado definitivo y la distribución ordinaria esté completa, se determina Aprobado o Desaprobado.
+
+En promedio:
+
+- Se compara el promedio calculado con la nota mínima para aprobar.
+- Mientras existan actividades sin resultado definitivo, el estado debe presentarse como provisional.
+- Cuando todas las actividades tengan resultado definitivo, se determina Aprobado o Desaprobado.
+
+No se debe presentar como definitivo un resultado cuando todavía existen actividades pendientes o entregadas sin calificación.
+
+Una actividad marcada como No entregada tiene un resultado definitivo de cero.
+
+Una actividad Entregada sin nota tiene un estado de entrega registrado, pero todavía no tiene un resultado académico definitivo.
+
+## 8. Finalización y reactivación de materias
+
+Una materia puede pasar a Finalizadas cuando todas sus actividades tengan un estado de entrega registrado:
+
+- Entregada.
+- No entregada.
+
+Una actividad Entregada sin nota puede seguir pendiente de calificación, pero ya tiene un estado de entrega registrado.
+
+La finalización de una materia y la determinación de su resultado académico son condiciones diferentes. Por tanto, una materia puede estar en Finalizadas y conservar un resultado académico provisional si todavía existen actividades entregadas sin calificación.
+
+Al finalizar una materia:
+
+- Se mueve de En curso a Finalizadas.
+- Se conserva su información y su historial.
+- Se mantiene su resultado académico.
+- Se conserva el estado de sus actividades.
+
+Debe existir una acción para reactivar la materia.
+
+Al reactivarla:
+
+- Regresa a En curso.
+- Recupera su información y estados anteriores.
+- Sus actividades vuelven a estar disponibles según su estado.
+- Se actualizan los resultados cuando corresponda.
+
+Si una actividad de una materia finalizada se reactiva individualmente, la materia debe regresar automáticamente a En curso.
+
+## 9. Eliminación de registros
+
+- Eliminar una actividad elimina sus datos y registros asociados.
+- Eliminar una materia elimina sus actividades y registros relacionados.
+- Las eliminaciones deben actualizar los cálculos de la materia y del motor IPA cuando corresponda.
+- No deben quedar sesiones o registros asociados a elementos eliminados.
+- Si se elimina una actividad ordinaria de una materia por puntos, se debe actualizar la distribución de puntos.
+- Si después de eliminarla la suma de los valores ordinarios queda por debajo del total, la distribución se considera incompleta y el resultado académico vuelve a ser provisional.
+
+## 10. Casos de prueba
+
+### Prueba 1: acumulación de puntos
+
+Materia de 500 puntos.
+
+Actividades:
+
+- Trabajo 1: 50 puntos.
+- Trabajo 2: 100 puntos.
+- Parcial: 100 puntos.
+- Proyecto: 150 puntos.
+- Examen final: 100 puntos.
+
+La suma debe ser 500.
+
+### Prueba 2: distribución progresiva de puntos
+
+Crear una materia de 500 puntos y agregar inicialmente actividades cuyos valores sumen 250.
+
+El sistema debe permitir guardar esas actividades, mostrar que faltan 250 puntos por distribuir y mantener el resultado académico como provisional.
+
+### Prueba 3: validación de distribución
+
+Si los valores de las actividades ordinarias suman 450, la configuración puede guardarse, pero debe mostrarse como incompleta.
+
+Si los valores suman 550, el sistema no debe permitir guardar la actividad que provoca que se supere el total.
+
+Cuando los valores sumen exactamente 500, la distribución debe considerarse completa.
+
+### Prueba 4: promedio
+
+Calificaciones: 4.0, 3.5 y 4.5.
+
+El promedio debe ser 4.0.
+
+### Prueba 5: actividad entregada sin nota
+
+La actividad debe aparecer en el historial como Pendiente de calificación y no debe afectar los resultados.
+
+### Prueba 6: actividad no entregada
+
+La actividad debe recibir cero y participar en los cálculos.
+
+### Prueba 7: borrar una nota
+
+Al borrar la nota de una actividad Entregada, esta debe permanecer Entregada y pasar a Pendiente de calificación.
+
+### Prueba 8: nota superior al máximo
+
+El sistema debe impedir guardar una calificación superior al máximo permitido.
+
+### Prueba 9: finalización de materia
+
+La materia no debe finalizar mientras exista alguna actividad sin estado de entrega registrado.
+
+### Prueba 10: reactivación de materia
+
+Una materia finalizada debe poder reactivarse conservando sus datos y estados anteriores.
+
+### Prueba 11: reactivación de actividad entregada
+
+Al reactivar una actividad Entregada y calificada:
+
+- Se elimina su calificación anterior.
+- Su estado vuelve a Pendiente.
+- Se excluye de los resultados académicos.
+- Regresa a la lista de actividades pendientes.
+- Si la materia estaba finalizada, vuelve a En curso.
+
+### Prueba 12: reactivación de actividad no entregada
+
+Al reactivar una actividad No entregada:
+
+- Se elimina el cero anterior.
+- Su estado vuelve a Pendiente.
+- Se excluye de los resultados académicos.
+- Regresa a la lista de actividades pendientes.
+
+### Prueba 13: nueva entrega después de reactivar
+
+Cuando una actividad reactivada se marca nuevamente como Entregada, debe aparecer en el historial como Pendiente de calificación hasta que se registre una nueva nota.
+
+## 11. Restricciones de implementación
+
+- No utilizar bases de datos ni almacenamiento persistente.
+- Los datos se mantienen únicamente en memoria durante la sesión.
+- La modalidad de calificación no se puede cambiar después de crear la materia.
+- Los cálculos deben estar separados de los componentes visuales.
+- Las operaciones deben actualizar automáticamente los resultados.
+- La implementación debe respetar las reglas de estados, historial y eliminación definidas en este documento.
+- La reactivación de actividades debe eliminar el resultado anterior y actualizar los cálculos correspondientes.
+- La distribución progresiva de puntos debe permitir valores inferiores al total, pero nunca superiores.
+- Los resultados deben distinguir entre valores provisionales y definitivos.
+
+## 12. Estado de aprobación
+
+Este documento recoge las reglas aprobadas para las dos modalidades de calificación de TiempoU.
+
+Cualquier modificación posterior debe conservar la coherencia con el modelo de datos, el motor IPA, la disponibilidad, las sesiones, el historial y las reglas generales del proyecto.
